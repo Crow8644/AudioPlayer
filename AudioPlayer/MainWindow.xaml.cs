@@ -22,23 +22,29 @@ namespace AudioPlayer
         public MainWindow()
         {
             InitializeComponent();
+            Closed += MainWindow_Closed;
         }
-        
+
+        private void MainWindow_Closed(object? sender, EventArgs e)
+        {
+            Sounds.closeObjects(this);
+        }
+
         // Calls our FSharp code for the file dialog box every time the load file button is clicked
         private void load_button_clicked(object sender, RoutedEventArgs e)
         {
-            string x = Files.getAudioFile(1);
+            string x = Files.getAudioFile(sender);
             file_select.Content = x;
         }
 
         private void play_button_Click(object sender, RoutedEventArgs e)
         {
-            
+            Sounds.play(sender);
         }
 
         private void pause_button_Click(object sender, RoutedEventArgs e)
         {
-
+            Sounds.pause(sender);
         }
     }
 
