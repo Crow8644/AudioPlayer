@@ -12,7 +12,7 @@ open System.Text.RegularExpressions
 open System.Collections
 
 let mutable default_path: string = "c:\\"               // Currently active directory to restore to
-let mutable collection_enumerator: IEnumerator = null   // Will step through the files in the folder
+let mutable file_enumerator: IEnumerator = null   // Will step through the files in the folder
 
 let seperateParentPath(path: string) =
     // The triple slash - \\\ - is due to an odd quirk I found with .net regexes
@@ -50,7 +50,10 @@ let getAudioFile(button) =
         fileList.Item(2)                // Returns the name of the file
         else "Unselected"               // Otherwise, returns "Unselected"
 
-let 
+let findNextFile =
+    // TODO: Test that file_enumerator != null
+    if file_enumerator.MoveNext() then file_enumerator.Current else ""
+
 //Forum that solved some headaches:
 //https://stackoverflow.com/questions/9646684/cant-use-system-windows-forms
 
