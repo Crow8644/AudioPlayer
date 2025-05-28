@@ -14,11 +14,21 @@ let mutable audioFile: AudioFileReader = null               // This object will 
 
 // Triggers from the output device:
 
+let switchNextFile(filePath: string): unit = 
+    if filePath = "" then
+        ()
+    else
+        audioFile.Dispose()
+        audioFile <- new AudioFileReader(filePath)
+        outputDevice.Init(audioFile)
+        outputDevice.Play()
+
 let initializeAudio(file, nextFinder: bool->string) = 
     // TODO: Add error handling here
     audioFile <- new AudioFileReader(file)
     outputDevice.Init(audioFile)
-
+    outputDevice.PlaybackStopped.Add(fun _ -> (audioFile.Length = audioFile.Position) |> nextFinder |> switchNextFile)
+    
     outputDevice.Play()
     true                                    // Return true when the setup proccess was successful
 
