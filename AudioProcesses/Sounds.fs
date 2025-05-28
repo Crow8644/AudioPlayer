@@ -12,7 +12,9 @@ open NAudio.Wave.SampleProviders
 let outputDevice: WaveOutEvent = new WaveOutEvent()         // We just keep one device variable and set its details dynamically
 let mutable audioFile: AudioFileReader = null               // This object will need to be recreated every time the user changes files
 
-let initializeAudio(file) = 
+// Triggers from the output device:
+
+let initializeAudio(file, nextFinder: bool->string) = 
     // TODO: Add error handling here
     audioFile <- new AudioFileReader(file)
     outputDevice.Init(audioFile)
