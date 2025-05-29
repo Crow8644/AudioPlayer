@@ -21,7 +21,6 @@ module directory_nav =
         array[pos]
 
 let mutable default_path: string = "c:\\"                                                      // Currently active directory to restore to
-let mutable file_enumerator: IEnumerator = Enumerable.Empty<string>().GetEnumerator()          // Will step through the files in the folder.
 
 // Citation for empty: https://stackoverflow.com/questions/1714351/return-an-empty-ienumerator
 
@@ -44,12 +43,27 @@ let moveNavTo(path: string) =
         true |> ignore      // No need to do anything here
     *)
 
-let advanceFile(endOfFile: bool): string =
-    if endOfFile then 
-        directory_nav.pos <- directory_nav.pos + 1              // We increment the counter at this point, before checking the next
-        if 0 <= directory_nav.pos && directory_nav.pos <= directory_nav.array.Length then directory_nav.current() else ""
+// Calls the file switch in Sounds for the next file in the directory
+// continuing may be false if the user has chosen not to automatically advance file
+let advanceFile(continuing: bool): string =
+    directory_nav.pos <- directory_nav.pos + 1              // We increment the counter at this point, before checking if it fits in the array
+    if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length && continuing
+    then 
+        Sounds.switchToFile(directory_nav.current())
+        directory_nav.current()                             // Returns the current directory as well
+    else ""
+
+let rewindFile(): string =
+    if Sounds.getFileProgress(20) = 0 then
+        directory_nav.pos <- directory_nav.pos - 1
     else
-        ""
+        ()
+    Sounds.pause()
+    // TODO: Wait for PlaybackStopped Event
+    //Sounds.outputDevice.PlaybackStopped.WaitOne()
+
+    Sounds.switchToFile(directory_nav.current())
+    directory_nav.current()
 
 // File Dialog Documentation, which I am referencing heavily: 
 // https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.filedialog?view=windowsdesktop-9.0
@@ -82,10 +96,6 @@ let getAudioFile(button) =
 
         fileList.Item(2)                        // Returns the name of the file
         else "Unselected"                       // Otherwise, returns "Unselected"
-
-let findNextFile(test) =
-    // file_enumerator will never be null, it just might be empty or at the end of the folder
-    if file_enumerator.MoveNext() then file_enumerator.Current else ""
 
 //Forum that solved some headaches:
 //https://stackoverflow.com/questions/9646684/cant-use-system-windows-forms
