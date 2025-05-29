@@ -23,6 +23,7 @@ namespace AudioPlayer
         {
             InitializeComponent();
             Closed += MainWindow_Closed;
+            
         }
 
         private void MainWindow_Closed(object? sender, EventArgs e)
@@ -45,6 +46,16 @@ namespace AudioPlayer
         private void pause_button_Click(object sender, RoutedEventArgs e)
         {
             Sounds.pause(sender);
+        }
+
+        private void rewind_button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void foward_button_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 

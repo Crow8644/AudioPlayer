@@ -12,8 +12,17 @@ open System.Text.RegularExpressions
 open System.Collections
 open System.Linq
 
+// Type file_tracker is used like a two way enumerator to track the files around that originally selected
+module directory_nav = 
+    let mutable array: array<string> = [||] 
+    let mutable pos: int = 0 
+    let current = fun _ ->
+        // TODO: Add error handling
+        array[pos]
+
 let mutable default_path: string = "c:\\"                                                      // Currently active directory to restore to
 let mutable file_enumerator: IEnumerator = Enumerable.Empty<string>().GetEnumerator()          // Will step through the files in the folder.
+
 // Citation for empty: https://stackoverflow.com/questions/1714351/return-an-empty-ienumerator
 
 let seperateParentPath(path: string) =
@@ -26,14 +35,19 @@ let seperateParentPath(path: string) =
     then [for x in m.Groups -> x.Value]                             // Composes the original string and two groups from the regex into a list
     else ["c:\\"]                                                   // Default parent directory
 
-// Starts the enumerator at the current
-let moveEnumeratorTo(path: string) =
+// Starts the enumerator at a specified file
+// Used to start at the current playing song when a file is selected from the middle of a directory
+let moveNavTo(path: string) =
+    directory_nav.pos <- Array.BinarySearch(directory_nav.array, path)
+    (*
     while not (path = (string)file_enumerator.Current) && file_enumerator.MoveNext() do
-        true |> ignore
+        true |> ignore      // No need to do anything here
+    *)
 
 let advanceFile(endOfFile: bool): string =
     if endOfFile then 
-        if file_enumerator.MoveNext() then (string)file_enumerator.Current else ""
+        directory_nav.pos <- directory_nav.pos + 1              // We increment the counter at this point, before checking the next
+        if 0 <= directory_nav.pos && directory_nav.pos <= directory_nav.array.Length then directory_nav.current() else ""
     else
         ""
 
@@ -45,20 +59,23 @@ let getAudioFile(button) =
     let dialog = new System.Windows.Forms.OpenFileDialog()
 
     // Provided by OpenFile documentation
-    dialog.InitialDirectory <- default_path             // Starts at the highest level
-    dialog.Filter <- "wav files (*.wav)|*.wav"          // Only allows the selection of .wav files
+    dialog.InitialDirectory <- default_path                             // Starts at the highest level
+    dialog.Filter <- "wav and mp3 files (*.wav;*.mp3)|*.wav;*.mp3"      // Only allows the selection of .wav files
 
     // Triggers the user selection and saves whether a file was selected or cancelled
 
-    if dialog.ShowDialog() = System.Windows.Forms.DialogResult.OK  
+    if dialog.ShowDialog() = System.Windows.Forms.DialogResult.OK
         then
         //Setting up file if selection was a success
         let fileList = seperateParentPath(dialog.FileName)
         default_path <- fileList.Item(1)        // Sets the default path to be used on next open to the parent folder of this selection
 
         // Gets and enumerator using only approved file types
-        file_enumerator <- Directory.EnumerateFiles(fileList.Item(1), "*.wav").GetEnumerator()
-        moveEnumeratorTo(dialog.FileName)
+        //file_enumerator <- Directory.EnumerateFiles(fileList.Item(1), "*.wav;*.mp3").GetEnumerator()
+
+        // TODO: manually combine other file types here
+        directory_nav.array <- Directory.EnumerateFiles(fileList.Item(1), "*.wav").ToArray()
+        moveNavTo(dialog.FileName)
 
         // TODO: Save path data and send the file name to audio player
         Sounds.initializeAudio(dialog.FileName, advanceFile) |> ignore
