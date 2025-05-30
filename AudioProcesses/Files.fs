@@ -49,6 +49,7 @@ let advanceFile(continuing: bool): string =
     directory_nav.pos <- directory_nav.pos + 1              // We increment the counter at this point, before checking if it fits in the array
     if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length && continuing
     then 
+        Sounds.pauseAndDo(fun _ -> ())
         Sounds.switchToFile(directory_nav.current())
         directory_nav.current()                             // Returns the current directory as well
     else ""
@@ -56,14 +57,10 @@ let advanceFile(continuing: bool): string =
 let rewindFile(): string =
     if Sounds.getFileProgress(20) = 0 then
         directory_nav.pos <- directory_nav.pos - 1
-    else
-        ()
-    Sounds.pause()
-    // TODO: Wait for PlaybackStopped Event
-    //Sounds.outputDevice.PlaybackStopped.WaitOne()
 
-    Sounds.switchToFile(directory_nav.current())
-    directory_nav.current()
+    Sounds.pauseAndDo(fun _ -> Sounds.switchToFile(directory_nav.current())) // Is sure to pause before requesting the track to switch
+
+    directory_nav.current()         // Returns the current directory
 
 // File Dialog Documentation, which I am referencing heavily: 
 // https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.filedialog?view=windowsdesktop-9.0

@@ -45,17 +45,17 @@ namespace AudioPlayer
 
         private void pause_button_Click(object sender, RoutedEventArgs e)
         {
-            Sounds.pause(sender);
+            Sounds.pause();
         }
 
         private void rewind_button_Click(object sender, RoutedEventArgs e)
         {
-
+            Files.rewindFile();
         }
 
         private void foward_button_Click(object sender, RoutedEventArgs e)
         {
-
+            Files.advanceFile(true);
         }
     }
 

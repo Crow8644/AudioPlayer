@@ -3,6 +3,7 @@
 // Contains all of the resources for working with audio device drivers:
 open NAudio.Wave
 open NAudio.Wave.SampleProviders
+open System.Threading
 
 // Examples and Documentation for NAudio:
 // General page: https://github.com/naudio/NAudio?tab=readme-ov-file
@@ -18,17 +19,23 @@ let mutable continuing: bool = true                         // Whether or not to
 // A mutable record of the current event handler used to find the next file, so it can be cleared when the folder is changed
 let mutable lastHandler: System.EventHandler<StoppedEventArgs> = null
 
-// TODO: Create semaphore for threaded signalling
+// Threading objects:
+let stopSignal: ManualResetEvent = new ManualResetEvent(false)          // This works as a mutex and allows us to synchronize events with the playback stopping
+let switchLock: obj = new obj()                                         // .NET uses the moniter object with this to lock a code block, allowing only one thread
+
+outputDevice.PlaybackStopped.Add(fun _ -> stopSignal.Set() |> ignore)
 
 // Called when output device ends with a file path already calculated and also by rewind and foward buttons
 let switchToFile(filePath: string): unit = 
-    if filePath = "" then
-        ()
-    else
-        audioFile.Dispose()
-        audioFile <- new AudioFileReader(filePath)
-        outputDevice.Init(audioFile)
-        outputDevice.Play()
+    // Makes sure multiple threads cannot do this code block at once
+    lock switchLock (fun _ ->
+        if filePath = "" then
+            ()
+        else
+            audioFile.Dispose()
+            audioFile <- new AudioFileReader(filePath)
+            outputDevice.Init(audioFile)
+            outputDevice.Play())
 
 // Returns a value out of paramater range for how through being played the file is
 let getFileProgress(resulution): int =
@@ -56,22 +63,29 @@ let initializeAudio(file, nextFinder: bool->string) =
     outputDevice.Play()
     true                                    // Return true when the setup proccess was successful
 
-let pause(button) =
+let pause() =
     outputDevice.Stop()
 
 // Allows a calling function to synconously call pause and send a one time follow-up action to it being stopped
-let pauseAndDo(button, nextAction: _->unit) =
-    // Wrapping the function in a handler lets us remove it
-    let handler = System.EventHandler<StoppedEventArgs>(fun _ -> nextAction)
+// Passed function must be relatively thread safe
+let pauseAndDo(nextAction: _->unit) =
+    // stopSignal may have been set several times before this point, so we need to reset it
+    if stopSignal.Reset() then              // Reset will return a true if successful and a false if not
+        // IMPORTANT: Because the event handlers for PlaybackStopped are ran in the thread stop was called from,
+        // The program freezes if we call stop and wait in the same thread
+        // Moreover, for reasons that I don't understand, the pausing part must be done in the main thread
+        let intern() =
+            stopSignal.WaitOne() |> ignore      // Wait for the playbackStopped signal
+            nextAction()                        // Excecute the requested action
+            
+        let t: Thread = new Thread(intern)
+        t.Name <- "sound_stopper"
+        t.Start()
 
-    // Add the function to run next to the handler and subsequently a function to remove the previous one
-    // This leaves that second function to stay in the handler, building up every time pauseAndDo() is invoked
-    // I tried some copy restore style things, but this was the main solution that worked
-    // A better solution would be to create another event that can be waited for in a thread and permantly associate it with PlaybackStopped
-    outputDevice.PlaybackStopped.AddHandler(handler)
-    outputDevice.PlaybackStopped.Add(fun _ -> outputDevice.PlaybackStopped.RemoveHandler(handler))
-
-    outputDevice.Stop()
+        pause()                                 // Pause the audio, causing our other thread to run its actions
+    else
+        //TODO: Throw some kind of error here
+        ()
 
 let play(button) =
     outputDevice.Play()
