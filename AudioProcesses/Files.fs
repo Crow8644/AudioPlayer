@@ -12,17 +12,22 @@ open System.Text.RegularExpressions
 open System.Collections
 open System.Linq
 
-// Type file_tracker is used like a two way enumerator to track the files around that originally selected
+// directory_nav module is used as a two way enumerator to track the files around that originally selected
+// It has three members:
+//  - array; a sorted array of paths in this directory
+//  - pos; the position in that array currently being tracked
+//  - current; a function that just calls array[pos] and returns an empty string if there was an error
 module directory_nav = 
     let mutable array: array<string> = [||] 
     let mutable pos: int = 0 
     let current = fun _ ->
-        // TODO: Add error handling
-        array[pos]
+        try
+            array[pos]
+        with
+            // The marker :? matches any exception of the following type
+            | :? System.IndexOutOfRangeException -> "" // Give a blank string
 
 let mutable default_path: string = "c:\\"                                                      // Currently active directory to restore to
-
-// Citation for empty: https://stackoverflow.com/questions/1714351/return-an-empty-ienumerator
 
 let seperateParentPath(path: string) =
     // The triple slash - \\\ - is due to an odd quirk I found with .net regexes
@@ -54,6 +59,7 @@ let advanceFile(continuing: bool): string =
         directory_nav.current()                             // Returns the current directory as well
     else ""
 
+// Switches to the alphabetically previous file in the directory
 let rewindFile(): string =
     if Sounds.getFileProgress(20) = 0 then
         directory_nav.pos <- directory_nav.pos - 1
@@ -89,10 +95,13 @@ let getAudioFile(button) =
         moveNavTo(dialog.FileName)
 
         // TODO: Save path data and send the file name to audio player
-        Sounds.initializeAudio(dialog.FileName, advanceFile) |> ignore
-
-        fileList.Item(2)                        // Returns the name of the file
-        else "Unselected"                       // Otherwise, returns "Unselected"
+        if Sounds.initializeAudio(dialog.FileName, advanceFile)
+        then 
+            fileList.Item(2)                        // Returns the name of the file
+        else 
+            // TODO: Display a message box here
+            "Error"
+    else "Unselected"                               // Returns "Unselected" when the dialog box was closed
 
 //Forum that solved some headaches:
 //https://stackoverflow.com/questions/9646684/cant-use-system-windows-forms

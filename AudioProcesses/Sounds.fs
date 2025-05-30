@@ -29,10 +29,10 @@ outputDevice.PlaybackStopped.Add(fun _ -> stopSignal.Set() |> ignore)
 let switchToFile(filePath: string): unit = 
     // Makes sure multiple threads cannot do this code block at once
     lock switchLock (fun _ ->
-        if filePath = "" then
-            ()
+        if filePath = "" then           // This usually indicates the end of the directory or that an error occurred in previous functions
+            ()                          // We do nothing here, letting the player sit in its current state
         else
-            audioFile.Dispose()
+            audioFile.Dispose()         // Clears audioFile's current resources
             audioFile <- new AudioFileReader(filePath)
             outputDevice.Init(audioFile)
             outputDevice.Play())
@@ -44,30 +44,33 @@ let getFileProgress(resulution): int =
         -1
     | _ ->                  // Matches with anything but null
         let portion: float = (float)audioFile.Position / (float)audioFile.Length    // Calculates current progress as a portion
-        (int)(floor(portion * resulution))                                               // Multiplies to fit specified range and rounds down
+        (int)(floor(portion * resulution))                                          // Multiplies to fit specified range and rounds down
 
     
-let initializeAudio(file, nextFinder: bool->string) = 
+let initializeAudio(file, nextFinder: bool->string): bool = 
     outputDevice.PlaybackStopped.RemoveHandler(lastHandler)
 
-    // TODO: Add error handling here
-    audioFile <- new AudioFileReader(file)
-    outputDevice.Init audioFile
+    try
+        audioFile <- new AudioFileReader(file)
+        outputDevice.Init audioFile
 
-    // Composes a function to be called by the PlaybackStopped event
-    // This is has the cumulative effect of allowing access to file data from the not-yet-compiled Files module
-    let stop(args: StoppedEventArgs) = if (audioFile.Length = audioFile.Position) then continuing |> nextFinder |> ignore else ()
-    lastHandler <- System.EventHandler<StoppedEventArgs>(fun (a: obj) -> stop)
-    outputDevice.PlaybackStopped.AddHandler(lastHandler)
+        // Composes a function to be called by the PlaybackStopped event
+        // This is has the cumulative effect of allowing access to file data from the not-yet-compiled Files module
+        let stop(args: StoppedEventArgs) = if (audioFile.Length = audioFile.Position) then continuing |> nextFinder |> ignore else ()
+        lastHandler <- System.EventHandler<StoppedEventArgs>(fun (a: obj) -> stop)
+        outputDevice.PlaybackStopped.AddHandler(lastHandler)
 
-    outputDevice.Play()
-    true                                    // Return true when the setup proccess was successful
+        outputDevice.Play()
+        true                                    // Return true when the setup proccess was successful
+    with
+        // Matches any exception and names it ex
+        | ex -> false                           // Returns false for failure
 
 let pause() =
     outputDevice.Stop()
 
 // Allows a calling function to synconously call pause and send a one time follow-up action to it being stopped
-// Passed function must be relatively thread safe
+//  - nextaction: _->unit; must be a relatively thread safe function
 let pauseAndDo(nextAction: _->unit) =
     // stopSignal may have been set several times before this point, so we need to reset it
     if stopSignal.Reset() then              // Reset will return a true if successful and a false if not
@@ -79,7 +82,7 @@ let pauseAndDo(nextAction: _->unit) =
             nextAction()                        // Excecute the requested action
             
         let t: Thread = new Thread(intern)
-        t.Name <- "sound_stopper"
+        t.Name <- "follow_action"
         t.Start()
 
         pause()                                 // Pause the audio, causing our other thread to run its actions
