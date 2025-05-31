@@ -34,7 +34,7 @@ namespace AudioPlayer
         // Calls our FSharp code for the file dialog box every time the load file button is clicked
         private void load_button_clicked(object sender, RoutedEventArgs e)
         {
-            string x = Files.getAudioFile(sender);
+            string x = Files.getAudioFile();
             file_select.Content = x;
         }
 
