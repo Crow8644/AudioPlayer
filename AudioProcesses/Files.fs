@@ -54,15 +54,6 @@ let moveNavTo(path: string) =
         true |> ignore      // No need to do anything here
     *)
 
-// Advances the file without additional checks
-// Designed to be called
-let autoAdvance(): string =
-    directory_nav.pos <- directory_nav.pos + 1
-    if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length
-    then
-        Sounds.switchToFile(directory_nav.current(), true)
-    directory_nav.current()
-
 // Calls the file switch in Sounds for the next file in the directory
 // continuing may be false if the user has chosen not to automatically advance file
 let advanceFile(continuing: bool): string =

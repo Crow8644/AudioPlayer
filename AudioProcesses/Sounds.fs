@@ -6,6 +6,10 @@ open NAudio.Wave.SampleProviders
 open System.Threading
 open System.Windows.Forms
 
+// NOTE: NAudio documentation says that init should not called more than once on a single object
+// I implimented my system here before seeing that, and did not run into any problems
+// If I do later I will correct this.
+
 exception SignalError of string
 
 // Examples and Documentation for NAudio:
@@ -15,7 +19,7 @@ exception SignalError of string
 
 // This entire module is dedicated to handling these two objects:
 let outputDevice: WaveOutEvent = new WaveOutEvent()         // We just keep one device variable and set its details dynamically
-let mutable audioFile: AudioFileReader = null               // This object will need to be recreated every time the user changes files
+let mutable audioFile: WaveStream = null                    // This object will need to be recreated every time the user changes files
 
 let mutable continuing: bool = true                         // Whether or not to automatically advance the file
 
@@ -37,7 +41,7 @@ let switchToFile(filePath: string, playAfter: bool): unit =
         else
             try
                 audioFile.Dispose()             // Clears audioFile's current resources
-                audioFile <- new AudioFileReader(filePath)
+                audioFile <- new WaveFileReader(filePath)
                 outputDevice.Init(audioFile)    // Despite protection through pauseAndDo, this still occationally generates errors
                 if playAfter then outputDevice.Play()
             with 
@@ -55,11 +59,11 @@ let getFileProgress(resulution): int =
         (int)(floor(portion * resulution))                                          // Multiplies to fit specified range and rounds down
 
 // Sets up all audio objects
-let initializeAudio(file, nextFinder: bool->string): bool = 
+let initializeAudio(file: string, nextFinder: bool->string): bool = 
     outputDevice.PlaybackStopped.RemoveHandler(advanceHandler)
 
     try
-        audioFile <- new AudioFileReader(file)  // Needs to be recreated for every new track
+        audioFile <- new WaveFileReader(file)  // Needs to be recreated for every new track
         outputDevice.Init audioFile
 
         // Composes a function to be called by the PlaybackStopped event
@@ -122,12 +126,15 @@ let stopAndDo(nextAction: _->unit) =
 // This clears up resources at the end of the program,
 // Only to be called as part of the window-close handler
 let closeObjects(window) =
-    outputDevice.Dispose()
-    // audioFile might not exist (in which case we have no need of disposing)
-    // So we encapsulate it in a try block
-    try
-        audioFile.Dispose()
-    with | ex -> ()         // An error here is not a problem, we just return unit
+    stopAndDo(fun _ ->          // Ensure the stream is already stopped before disposing of resources
+        outputDevice.Dispose()
+        // audioFile might not exist (in which case we have no need of disposing)
+        // So we encapsulate it in a try block
+        try
+            audioFile.Dispose()
+        with | ex -> ()         // An error here is not a problem, we just return unit
+    )
 
 // Referenced Documentation:
 // https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/values/null-values
+// https://markheath.net/post/naudio-wavestream-in-depth
