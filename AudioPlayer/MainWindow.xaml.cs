@@ -19,6 +19,7 @@ namespace AudioPlayer
     /// </summary>
     public partial class MainWindow : Window
     {
+        private bool paused = false;
         public MainWindow()
         {
             InitializeComponent();
@@ -38,14 +39,28 @@ namespace AudioPlayer
             file_select.Content = x;
         }
 
-        private void play_button_Click(object sender, RoutedEventArgs e)
+        private void play_pause_button_Click(object sender, RoutedEventArgs e)
         {
-            Sounds.play(sender);
+            // Toggle logic for the button that plays and pauses audio
+            if (paused)
+            {
+                Sounds.play(sender);
+                play_pause_button.Content = "Pause";
+                paused = false;
+            }
+            else
+            {
+                Sounds.pause();
+                play_pause_button.Content = "Play";
+                paused = true;
+            }
         }
 
-        private void pause_button_Click(object sender, RoutedEventArgs e)
+        private void stop_button_Click(object sender, RoutedEventArgs e)
         {
-            Sounds.pause();
+            Sounds.stop();
+            play_pause_button.Content = "Play";
+            paused = true;
         }
 
         private void rewind_button_Click(object sender, RoutedEventArgs e)

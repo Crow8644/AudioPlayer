@@ -4,6 +4,7 @@
 open NAudio.Wave
 open NAudio.Wave.SampleProviders
 open System.Threading
+open System.Windows.Forms
 
 exception SignalError of string
 
@@ -31,13 +32,18 @@ outputDevice.PlaybackStopped.Add(fun _ -> stopSignal.Set() |> ignore)   // Links
 let switchToFile(filePath: string, playAfter: bool): unit = 
     // Makes sure multiple threads cannot do this code block at once
     lock switchLock (fun _ ->
-        if filePath = "" then           // This usually indicates the end of the directory or that an error occurred in previous functions
-            ()                          // We do nothing here, letting the player sit in its current state
+        if filePath = "" then                   // This usually indicates the end of the directory or that an error occurred in previous functions
+            ()                                  // We do nothing here, letting the player sit in its current state
         else
-            audioFile.Dispose()         // Clears audioFile's current resources
-            audioFile <- new AudioFileReader(filePath)
-            outputDevice.Init(audioFile)
-            if playAfter then outputDevice.Play())
+            try
+                audioFile.Dispose()             // Clears audioFile's current resources
+                audioFile <- new AudioFileReader(filePath)
+                outputDevice.Init(audioFile)    // Despite protection through pauseAndDo, this still occationally generates errors
+                if playAfter then outputDevice.Play()
+            with 
+                | ex -> 
+                MessageBox.Show("There was an error in playing a new file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
+        ) // End fun
 
 // Returns a value out of paramater range for how through being played the file is
 let getFileProgress(resulution): int =
@@ -48,7 +54,7 @@ let getFileProgress(resulution): int =
         let portion: float = (float)audioFile.Position / (float)audioFile.Length    // Calculates current progress as a portion
         (int)(floor(portion * resulution))                                          // Multiplies to fit specified range and rounds down
 
-    
+// Sets up all audio objects
 let initializeAudio(file, nextFinder: bool->string): bool = 
     outputDevice.PlaybackStopped.RemoveHandler(advanceHandler)
 
@@ -68,16 +74,32 @@ let initializeAudio(file, nextFinder: bool->string): bool =
         // Matches any exception and names it ex
         | ex -> false                           // Returns false for failure
 
-// Pauses the audio device, using Stop so playbackStopped will be signalled
+
+// -- Public Use Control Functions -- //
+let play(button) =
+    outputDevice.Play()
+
 let pause() =
-    outputDevice.Stop()
+    outputDevice.Pause()
+
+// Ends the audio device playback, using Stop so playbackStopped will be signalled
+let stop() =
+    outputDevice.Stop()         // A very sudden stop to the audio
+    audioFile.Position <- 0     // Resets the file when audio is stopped
+
+
+// -- More Internal Control Functions -- //
 
 // Allows a calling function to synconously call pause and send a one time follow-up action to it being stopped
 //  - nextaction: _->unit; must be a relatively thread safe function
 // Throws a Signal Error if the ManuelResetEvent cannot be reset
-let pauseAndDo(nextAction: _->unit) =
+let stopAndDo(nextAction: _->unit) =
+    // Tests if the device is already stopped, so the passed action still happens
+    if outputDevice.PlaybackState = PlaybackState.Stopped
+    then 
+        nextAction()
     // stopSignal may have been set several times before this point, so we need to reset it
-    if stopSignal.Reset() then                  // Reset will return a true if successful and a false if not
+    elif stopSignal.Reset() then                  // Reset will return a true if successful and a false if not
 
         // IMPORTANT: Because the event handlers for PlaybackStopped are ran in the thread stop was called from,
         // The program freezes if we call stop and wait in the same thread
@@ -95,8 +117,7 @@ let pauseAndDo(nextAction: _->unit) =
         raise (SignalError("Signals for sound pausing encountered an error"))
         ()
 
-let play(button) =
-    outputDevice.Play()
+// -- Cleanup Functions -- //
 
 // This clears up resources at the end of the program,
 // Only to be called as part of the window-close handler

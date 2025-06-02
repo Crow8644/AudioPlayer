@@ -17,8 +17,8 @@
                 </TransformGroup>
             </Slider.RenderTransform>
         </Slider>
-        <Button Name="play_button" Content="Play" HorizontalAlignment="Left" Height="45" Margin="40,0,0,40" VerticalAlignment="Bottom" Width="45" Click="play_button_Click"/>
-        <Button Name="pause_button" Content="Pause" HorizontalAlignment="Left" Height="45" Margin="40,0,0,105" VerticalAlignment="Bottom" Width="45" Click="pause_button_Click"/>
+        <Button Name="play_pause_button" Content="Pause" HorizontalAlignment="Left" Height="45" Margin="40,0,0,40" VerticalAlignment="Bottom" Width="45" Click="play_pause_button_Click"/>
+        <Button Name="stop_button" Content="Stop" HorizontalAlignment="Left" Height="45" Margin="40,0,0,105" VerticalAlignment="Bottom" Width="45" Click="stop_button_Click"/>
         <ProgressBar Name="track_progress" HorizontalAlignment="Left" Height="28" Margin="184,0,0,40" VerticalAlignment="Bottom" Value="40" Width="561" Foreground="#26A5EB"/>
         <Button Name="file_select" Content="Select File" HorizontalAlignment="Left" Height="45" Margin="40,40,0,0" VerticalAlignment="Top" Width="116" Click="load_button_clicked"/>
         <Button Name="rewind_button" Content="Rewind" HorizontalAlignment="Left" Margin="184,284,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="rewind_button_Click"/>

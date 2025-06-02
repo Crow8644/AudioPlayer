@@ -54,14 +54,23 @@ let moveNavTo(path: string) =
         true |> ignore      // No need to do anything here
     *)
 
+// Advances the file without additional checks
+// Designed to be called
+let autoAdvance(): string =
+    directory_nav.pos <- directory_nav.pos + 1
+    if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length
+    then
+        Sounds.switchToFile(directory_nav.current(), true)
+    directory_nav.current()
+
 // Calls the file switch in Sounds for the next file in the directory
 // continuing may be false if the user has chosen not to automatically advance file
 let advanceFile(continuing: bool): string =
     directory_nav.pos <- directory_nav.pos + 1              // We increment the counter at this point, before checking if it fits in the array
     if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length && continuing
     then 
-        Sounds.pauseAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))    // We do this because we have to wait until playback stops
-        directory_nav.current()                                                     // Returns the current directory as well
+        Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))   // We do this because we have to wait until playback stops
+        directory_nav.current()                                                         // Returns the current directory as well
     else ""
 
 // Switches to the alphabetically previous file in the directory
@@ -69,7 +78,7 @@ let rewindFile(): string =
     if Sounds.getFileProgress(20) = 0 then
         directory_nav.pos <- directory_nav.pos - 1
 
-    Sounds.pauseAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true)) // Is sure to pause before requesting the track to switch
+    Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))       // Is sure to pause before requesting the track to switch
 
     directory_nav.current()         // Returns the current directory
 
