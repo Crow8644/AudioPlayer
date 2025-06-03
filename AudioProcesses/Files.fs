@@ -28,11 +28,11 @@ module directory_nav =
             // The marker :? matches any exception of the following type
             | :? System.IndexOutOfRangeException -> ""  // Give a blank string
 
-let userFolder: string = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
+let userFolder: string = Environment.SpecialFolder.UserProfile |> Environment.GetFolderPath
 
 // default_path holds the currently active directory to restore to
 // We start the proccess trying to use this user profile's directory
-let mutable default_path: string = if Directory.Exists(userFolder) then userFolder else "c:\\"
+let mutable default_path: string = if Directory.Exists userFolder then userFolder else "c:\\"
 
 
 let seperateParentPath(path: string) =
@@ -40,7 +40,7 @@ let seperateParentPath(path: string) =
     // It seemingly processes escaping the regex special characters and escaping the string characters on seperate occations
     // This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
     // The triple slash is necessary for the regex to match a single slash
-    let m = Regex("^(.*\\\)([^\\\]*)(\.[^\\\]*)$").Match(path)      // Regex matches three groups: the parent folder, the file name, and the file extention
+    let m = Regex("^(.*\\\)([^\\\]*)(\.[^\\\]*)$").Match path       // Regex matches three groups: the parent folder, the file name, and the file extention
     if m.Success
     then [for x in m.Groups -> x.Value]                             // Composes the original string and two groups from the regex into a list
     else ["c:\\"]                                                   // Default parent directory
@@ -66,7 +66,7 @@ let advanceFile(continuing: bool): string =
 
 // Switches to the alphabetically previous file in the directory
 let rewindFile(): string =
-    if Sounds.getFileProgress(20) = 0 then
+    if Sounds.getFileProgress 20 = 0 then
         directory_nav.pos <- directory_nav.pos - 1
 
     Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))       // Is sure to pause before requesting the track to switch
@@ -82,8 +82,8 @@ let getAudioFile() =
     let dialog = new OpenFileDialog()
 
     // Extra protection, resets the user's home directory if the previously used directory was deleted
-    if not (Directory.Exists(default_path)) 
-    then if Directory.Exists(userFolder) then default_path <- userFolder else default_path <- "c:\\"
+    if not (Directory.Exists default_path) 
+    then if Directory.Exists userFolder  then default_path <- userFolder else default_path <- "c:\\"
 
     // Set dialog properties
     dialog.InitialDirectory <- default_path                             // Starts at the highest level
@@ -94,20 +94,20 @@ let getAudioFile() =
     if dialog.ShowDialog() = System.Windows.Forms.DialogResult.OK
         then
         //Setting up file if selection was a success
-        let fileList = seperateParentPath(dialog.FileName)
-        default_path <- fileList.Item(1)            // Sets the default path to be used on next open to the parent folder of this selection
+        let fileList = seperateParentPath dialog.FileName
+        default_path <- fileList.Item 1             // Sets the default path to be used on next open to the parent folder of this selection
 
         // Gets and enumerator using only approved file types
         //file_enumerator <- Directory.EnumerateFiles(fileList.Item(1), "*.wav;*.mp3").GetEnumerator()
 
         // TODO: manually combine other file types here
-        directory_nav.array <- Directory.EnumerateFiles(fileList.Item(1), "*.wav").ToArray()
-        moveNavTo(dialog.FileName)
+        directory_nav.array <- Directory.EnumerateFiles(fileList.Item 1, "*.wav").ToArray()
+        moveNavTo dialog.FileName
 
         // TODO: Save path data and send the file name to audio player
         if Sounds.initializeAudio(dialog.FileName, advanceFile)
         then 
-            fileList.Item(2)                        // Returns the name of the file
+            fileList.Item 2                         // Returns the name of the file
         else 
             MessageBox.Show("There was an error in playing the selected file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
             "Error"

@@ -24,8 +24,14 @@ namespace AudioPlayer
         {
             InitializeComponent();
             Closed += MainWindow_Closed;
-            
+            CompositionTarget.Rendering += update_progress_slider;
+            //track_progress.MouseUp += track_change;
         }
+
+        //private void track_change(object sender, MouseEventArgs e)
+        //{
+            //throw new NotImplementedException();
+        //}
 
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
@@ -72,8 +78,15 @@ namespace AudioPlayer
         {
             Files.advanceFile(true);
         }
-    }
 
+        private void update_progress_slider(object? sender, EventArgs e)
+        {
+            float progress = Sounds.getFileProgress((int)track_progress.Width);
+            if (progress >= 0 && !track_progress.IsMouseCaptureWithin) {
+                track_progress.Value = progress / ((float)track_progress.Width / 10.0f); // We divide by ten because the slider is out of ten
+            }
+        }
+    }
 }
 
 // References:
@@ -81,3 +94,4 @@ namespace AudioPlayer
 // https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.progressbar?view=windowsdesktop-9.0
 // https://connelhooley.uk/blog/2017/04/30/f-sharp-to-c-sharp/
 // https://www.christianfindlay.com/blog/how-to-use-fsharp-and-csharp
+// https://learn.microsoft.com/en-us/dotnet/desktop/wpf/graphics-multimedia/how-to-render-on-a-per-frame-interval-using-compositiontarget

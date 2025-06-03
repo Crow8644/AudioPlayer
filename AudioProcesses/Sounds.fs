@@ -42,7 +42,7 @@ let switchToFile(filePath: string, playAfter: bool): unit =
             try
                 audioFile.Dispose()             // Clears audioFile's current resources
                 audioFile <- new WaveFileReader(filePath)
-                outputDevice.Init(audioFile)    // Despite protection through pauseAndDo, this still occationally generates errors
+                outputDevice.Init audioFile     // Despite protection through pauseAndDo, this still occationally generates errors
                 if playAfter then outputDevice.Play()
             with 
                 | ex -> 
@@ -50,33 +50,51 @@ let switchToFile(filePath: string, playAfter: bool): unit =
         ) // End fun
 
 // Returns a value out of paramater range for how through being played the file is
-let getFileProgress(resulution): int =
-    match audioFile with
-    | null ->               // Matches with null
-        -1
-    | _ ->                  // Matches with anything but null
-        let portion: float = (float)audioFile.Position / (float)audioFile.Length    // Calculates current progress as a portion
-        (int)(floor(portion * resulution))                                          // Multiplies to fit specified range and rounds down
+let getFileProgress(resulution: int): int =
+    if Monitor.TryEnter switchLock              // This function is called by the GUI thread, so we want no blocking here, just return 0 if unable to attain lock
+    then
+        try
+            match audioFile with
+            | null ->
+                0
+            | _ ->
+                let portion: float = float audioFile.Position / float audioFile.Length      // Calculates current progress as a portion
+                int (floor(portion * float resulution))                                   // Multiplies to fit specified range and rounds down
+        finally
+            Monitor.Exit switchLock
+    else
+        0
+
+let isFileOver(): bool = 
+    if Monitor.TryEnter switchLock
+    then
+        try
+            audioFile.Length = audioFile.Position
+        finally
+            Monitor.Exit switchLock
+    else 
+        false
 
 // Sets up all audio objects
 let initializeAudio(file: string, nextFinder: bool->string): bool = 
-    outputDevice.PlaybackStopped.RemoveHandler(advanceHandler)
+    lock switchLock (fun _ ->
+        outputDevice.PlaybackStopped.RemoveHandler advanceHandler
+        try
+            audioFile <- new WaveFileReader(file)  // Needs to be recreated for every new track
+            outputDevice.Init audioFile
 
-    try
-        audioFile <- new WaveFileReader(file)  // Needs to be recreated for every new track
-        outputDevice.Init audioFile
+            // Composes a function to be called by the PlaybackStopped event
+            // This is has the cumulative effect of allowing access to file data from the not-yet-compiled Files module
+            let stop(args: StoppedEventArgs) = if isFileOver() then continuing |> nextFinder |> ignore else ()
+            advanceHandler <- System.EventHandler<StoppedEventArgs>(fun (a: obj) -> stop)
+            outputDevice.PlaybackStopped.AddHandler advanceHandler
 
-        // Composes a function to be called by the PlaybackStopped event
-        // This is has the cumulative effect of allowing access to file data from the not-yet-compiled Files module
-        let stop(args: StoppedEventArgs) = if (audioFile.Length = audioFile.Position) then continuing |> nextFinder |> ignore else ()
-        advanceHandler <- System.EventHandler<StoppedEventArgs>(fun (a: obj) -> stop)
-        outputDevice.PlaybackStopped.AddHandler(advanceHandler)
-
-        outputDevice.Play()
-        true                                    // Return true when the setup proccess was successful
-    with
-        // Matches any exception and names it ex
-        | ex -> false                           // Returns false for failure
+            outputDevice.Play()
+            true                                    // Return true when the setup proccess was successful
+        with
+            // Matches any exception and names it ex
+            | ex -> false                           // Returns false for failure
+    )
 
 
 // -- Public Use Control Functions -- //

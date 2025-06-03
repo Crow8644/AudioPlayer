@@ -7,21 +7,13 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid Background="#554D7A">
-        <Slider Name="volume_slider" HorizontalAlignment="Left" Margin="83,0,0,82" VerticalAlignment="Bottom" Width="111" RenderTransformOrigin="0.5,0.5" Minimum="0" Maximum="100" Value="100" Height="20">
-            <Slider.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform/>
-                    <SkewTransform/>
-                    <RotateTransform Angle="-90"/>
-                    <TranslateTransform/>
-                </TransformGroup>
-            </Slider.RenderTransform>
-        </Slider>
+        <Slider Name="volume_slider" HorizontalAlignment="Left" Margin="123,0,0,40" VerticalAlignment="Bottom" Width="20" RenderTransformOrigin="0.5,0.5" Minimum="0" Maximum="100" Value="100" Height="110" Orientation="Vertical"/>
         <Button Name="play_pause_button" Content="Pause" HorizontalAlignment="Left" Height="45" Margin="40,0,0,40" VerticalAlignment="Bottom" Width="45" Click="play_pause_button_Click"/>
         <Button Name="stop_button" Content="Stop" HorizontalAlignment="Left" Height="45" Margin="40,0,0,105" VerticalAlignment="Bottom" Width="45" Click="stop_button_Click"/>
-        <ProgressBar Name="track_progress" HorizontalAlignment="Left" Height="28" Margin="184,0,0,40" VerticalAlignment="Bottom" Value="40" Width="561" Foreground="#26A5EB"/>
+        <Slider Name="track_progress" HorizontalAlignment="Left" Height="28" Margin="184,0,0,40" VerticalAlignment="Bottom" Value="0" Width="570" Foreground="#26A5EB"/>
         <Button Name="file_select" Content="Select File" HorizontalAlignment="Left" Height="45" Margin="40,40,0,0" VerticalAlignment="Top" Width="116" Click="load_button_clicked"/>
         <Button Name="rewind_button" Content="Rewind" HorizontalAlignment="Left" Margin="184,284,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="rewind_button_Click"/>
         <Button Name="foward_button" Content="Forward" HorizontalAlignment="Left" Margin="255,284,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="foward_button_Click"/>
+        <Label Name="file_name_display" Content="Unselected" HorizontalAlignment="Left" Height="28" Margin="329,22,0,0" VerticalAlignment="Top" Width="416"/>
     </Grid>
 </Window>
