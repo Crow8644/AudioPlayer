@@ -149,7 +149,11 @@ let closeObjects(window) =
         // audioFile might not exist (in which case we have no need of disposing)
         // So we encapsulate it in a try block
         try
-            audioFile.Dispose()
+            match audioFile with
+            | null ->
+                ()
+            | _ ->
+                audioFile.Dispose()
         with | ex -> ()         // An error here is not a problem, we just return unit
     )
 
