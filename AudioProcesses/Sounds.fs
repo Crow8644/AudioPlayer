@@ -49,6 +49,20 @@ let switchToFile(filePath: string, playAfter: bool): unit =
                 MessageBox.Show("There was an error in playing a new file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
         ) // End fun
 
+let changeFilePostitionTo(postion: float) =
+    lock switchLock (fun _ ->
+        match audioFile with
+            | null ->
+                ()
+            | _ ->
+                // The setter for Position has built-in protection
+                audioFile.Position <-
+                // This calculation finds the exact byte position that needs to be set, understanding that the result must be an integer multiple of BlockAlign
+                audioFile.Length / (int64)audioFile.BlockAlign |> float 
+                |> (*) postion |> int64 
+                |> (*) (int64 audioFile.BlockAlign)
+    ) // End locked function
+
 // Returns a value out of paramater range for how through being played the file is
 let getFileProgress(resulution: int): int =
     if Monitor.TryEnter switchLock              // This function is called by the GUI thread, so we want no blocking here, just return 0 if unable to attain lock
@@ -74,6 +88,8 @@ let isFileOver(): bool =
             Monitor.Exit switchLock
     else 
         false
+
+let adjustVol(volume) = outputDevice.Volume <- volume
 
 // Sets up all audio objects
 let initializeAudio(file: string, nextFinder: bool->string): bool = 
@@ -152,7 +168,7 @@ let closeObjects(window) =
             match audioFile with
             | null ->
                 ()
-            | _ ->
+            | _ ->              // Anything else
                 audioFile.Dispose()
         with | ex -> ()         // An error here is not a problem, we just return unit
     )

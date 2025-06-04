@@ -25,13 +25,12 @@ namespace AudioPlayer
             InitializeComponent();
             Closed += MainWindow_Closed;
             CompositionTarget.Rendering += update_progress_slider;
-            //track_progress.MouseUp += track_change;
         }
 
-        //private void track_change(object sender, MouseEventArgs e)
-        //{
-            //throw new NotImplementedException();
-        //}
+        private void track_change(object? sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            Sounds.changeFilePostitionTo(track_progress.Value / 10.0f);
+        }
 
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
@@ -85,6 +84,11 @@ namespace AudioPlayer
             if (progress >= 0 && !track_progress.IsMouseCaptureWithin) {
                 track_progress.Value = progress / ((float)track_progress.Width / 10.0f); // We divide by ten because the slider is out of ten
             }
+        }
+
+        private void volume_slider_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        {
+            Sounds.adjustVol((float)volume_slider.Value / 100.0f);
         }
     }
 }

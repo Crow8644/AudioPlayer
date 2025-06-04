@@ -34,7 +34,6 @@ let userFolder: string = Environment.SpecialFolder.UserProfile |> Environment.Ge
 // We start the proccess trying to use this user profile's directory
 let mutable default_path: string = if Directory.Exists userFolder then userFolder else "c:\\"
 
-
 let seperateParentPath(path: string) =
     // The triple slash - \\\ - is due to an odd quirk I found with .net regexes
     // It seemingly processes escaping the regex special characters and escaping the string characters on seperate occations
@@ -82,7 +81,7 @@ let getAudioFile() =
     let dialog = new OpenFileDialog()
 
     // Extra protection, resets the user's home directory if the previously used directory was deleted
-    if not (Directory.Exists default_path) 
+    if not (Directory.Exists default_path)
     then if Directory.Exists userFolder  then default_path <- userFolder else default_path <- "c:\\"
 
     // Set dialog properties
@@ -105,6 +104,8 @@ let getAudioFile() =
         moveNavTo dialog.FileName
 
         // TODO: Save path data and send the file name to audio player
+
+        Sounds.stopAndDo(fun _ -> ())                               // Waits for any currently playing audio to stop
         if Sounds.initializeAudio(dialog.FileName, advanceFile)
         then 
             fileList.Item 2                         // Returns the name of the file
