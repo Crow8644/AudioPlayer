@@ -42,7 +42,7 @@ let regexSeperate(regex: string, default_ret: string, toParse: string) =
     else [default_ret]                                              // Default parent directory
 
 // Partial application syntax really isn't working as expected at the moment
-let seperateParentPath = fun path -> regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)$", " ", path)
+let seperateParentPath = fun path -> regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)$", "c:\\", path)
     // The triple slash - \\\ - is due to an odd quirk I found with .net regexes
     // It seemingly processes escaping the regex special characters and escaping the string characters on seperate occations
     // This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
@@ -64,7 +64,10 @@ let advanceFile(continuing: bool): string =
     if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length && continuing
     then 
         Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))   // We do this because we have to wait until playback stops
-        (directory_nav.current() |> seperateParentPath).Item 2                          // Returns the current file name for UI reasons
+        let fileList = (directory_nav.current() |> seperateParentPath)
+        if fileList.Length > 1
+        then fileList.Item 2                                                            // Returns the current file name for UI reasons
+        else directory_nav.current()
     else ""
 
 // Switches to the alphabetically previous file in the directory
@@ -73,8 +76,10 @@ let rewindFile(): string =
         directory_nav.pos <- directory_nav.pos - 1
 
     Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))       // Is sure to pause before requesting the track to switch
-
-    (directory_nav.current() |> seperateParentPath).Item 2                              // Returns the current directory
+    let fileList = (directory_nav.current() |> seperateParentPath)
+    if fileList.Length > 1
+    then fileList.Item 2                                                                // Returns the current file name for UI reasons
+    else directory_nav.current()
 
 // File Dialog Documentation, which I am referencing heavily: 
 // https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.filedialog?view=windowsdesktop-9.0
@@ -106,18 +111,18 @@ let getAudioFile(display: ContentControl) =
 
         // TODO: Save path data and send the file name to audio player
 
-        Sounds.stopAndDo(fun _ -> ())                               // Waits for any currently playing audio to stop
+        Sounds.stopAndDo(fun _ -> ())                                   // Waits for any currently playing audio to stop
         if Sounds.initializeAudio(dialog.FileName, advanceFile, 
             fun name -> display.Content <- name)
         then 
-            display.Content <- fileList.Item 2                      // Displays the name of the file
+            display.Content <- fileList.Item 2                          // Displays the name of the file
             true
         else 
             MessageBox.Show("There was an error in playing the selected file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
             display.Content <- "Error"
             false
     else 
-        display.Content <- "Unselected"                             // Displays "Unselected" when the dialog box was closed
+        display.Content <- "Unselected"                                 // Displays "Unselected" when the dialog box was closed
         false
 
 //Forum that solved some headaches:

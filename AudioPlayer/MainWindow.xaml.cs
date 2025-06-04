@@ -24,7 +24,21 @@ namespace AudioPlayer
         {
             InitializeComponent();
             Closed += MainWindow_Closed;
+            KeyDown += MainWindow_KeyDown;
             CompositionTarget.Rendering += update_progress_slider;
+        }
+
+        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Connects arrow keys to skip buttons
+            if (e.Key == Key.Left)
+            {
+                skip_back_Click(new object(), new RoutedEventArgs());
+            }
+            else if (e.Key == Key.Right)
+            {
+                skip_forward_Click(new object(), new RoutedEventArgs());
+            }
         }
 
         private void track_change(object? sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
@@ -93,12 +107,12 @@ namespace AudioPlayer
 
         private void skip_back_Click(object sender, RoutedEventArgs e)
         {
-
+            Sounds.skip(-5);
         }
 
         private void skip_forward_Click(object sender, RoutedEventArgs e)
         {
-
+            Sounds.skip(5);
         }
     }
 }

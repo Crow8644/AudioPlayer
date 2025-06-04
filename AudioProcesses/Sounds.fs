@@ -53,16 +53,25 @@ let switchToFile(filePath: string, playAfter: bool): unit =
 let changeFilePostitionTo(postion: float) =
     lock switchLock (fun _ ->
         match audioFile with
-            | null ->
-                ()
-            | _ ->
-                // The setter for Position has built-in protection
-                audioFile.Position <-
-                // This calculation finds the exact byte position that needs to be set, understanding that the result must be an integer multiple of BlockAlign
-                audioFile.Length / (int64)audioFile.BlockAlign |> float 
-                |> (*) postion |> int64 
-                |> (*) (int64 audioFile.BlockAlign)
+        | null ->
+            ()
+        | _ ->
+            // The setter for Position has built-in protection
+            audioFile.Position <-
+            // This calculation finds the exact byte position that needs to be set, understanding that the result must be an integer multiple of BlockAlign
+            audioFile.Length / (int64)audioFile.BlockAlign |> float 
+            |> (*) postion |> int64 
+            |> (*) (int64 audioFile.BlockAlign)
     ) // End locked function
+
+let skip(seconds: int) =
+    lock switchLock (fun _ ->
+        match audioFile with
+        | null ->
+            ()
+        | _ ->
+            audioFile.Skip(seconds)
+    )
 
 // Returns a value out of paramater range for how through being played the file is
 let getFileProgress(resulution: int): int =
