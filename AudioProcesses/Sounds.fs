@@ -4,6 +4,7 @@
 open NAudio.Wave
 open NAudio.Wave.SampleProviders
 open System.Threading
+open System.Threading.Tasks
 open System.Windows.Forms
 
 // NOTE: NAudio documentation says that init should not called more than once on a single object
@@ -73,7 +74,7 @@ let getFileProgress(resulution: int): int =
                 0
             | _ ->
                 let portion: float = float audioFile.Position / float audioFile.Length      // Calculates current progress as a portion
-                int (floor(portion * float resulution))                                   // Multiplies to fit specified range and rounds down
+                int (floor(portion * float resulution))                                     // Multiplies to fit specified range and rounds down
         finally
             Monitor.Exit switchLock
     else
@@ -92,7 +93,7 @@ let isFileOver(): bool =
 let adjustVol(volume) = outputDevice.Volume <- volume
 
 // Sets up all audio objects
-let initializeAudio(file: string, nextFinder: bool->string): bool = 
+let initializeAudio(file: string, nextFinder: bool->string, uiUpdates: string->unit): bool = 
     lock switchLock (fun _ ->
         outputDevice.PlaybackStopped.RemoveHandler advanceHandler
         try
@@ -101,7 +102,7 @@ let initializeAudio(file: string, nextFinder: bool->string): bool =
 
             // Composes a function to be called by the PlaybackStopped event
             // This is has the cumulative effect of allowing access to file data from the not-yet-compiled Files module
-            let stop(args: StoppedEventArgs) = if isFileOver() then continuing |> nextFinder |> ignore else ()
+            let stop(args: StoppedEventArgs) = if isFileOver() then continuing |> nextFinder |> uiUpdates else ()
             advanceHandler <- System.EventHandler<StoppedEventArgs>(fun (a: obj) -> stop)
             outputDevice.PlaybackStopped.AddHandler advanceHandler
 
@@ -123,7 +124,7 @@ let pause() =
 // Ends the audio device playback, using Stop so playbackStopped will be signalled
 let stop() =
     outputDevice.Stop()         // A very sudden stop to the audio
-    audioFile.Position <- 0     // Resets the file when audio is stopped
+    changeFilePostitionTo(0)    // Resets the file when audio is stopped
 
 
 // -- More Internal Control Functions -- //
@@ -146,11 +147,12 @@ let stopAndDo(nextAction: _->unit) =
             stopSignal.WaitOne() |> ignore      // Wait for the playbackStopped signal
             nextAction()                        // Excecute the requested action
             
-        let t: Thread = new Thread(parellel)    // Sets the thread with internal function
-        t.Name <- "follow_action"
-        t.Start()                               // Begins the thread
+        let t: Task = new Task(parellel)        // Sets the task with internal function
+        t.Start()                               // Begins the task
 
         outputDevice.Stop()                     // Pause the audio and signal playbackStopped, causing our other thread to run its actions
+
+        //t.Wait()                                // Waits for the thread to finish
     else
         raise (SignalError("Signals for sound pausing encountered an error"))
         ()

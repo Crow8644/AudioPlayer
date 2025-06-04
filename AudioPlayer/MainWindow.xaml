@@ -10,9 +10,13 @@
         <Slider Name="volume_slider" HorizontalAlignment="Left" Margin="123,0,0,40" VerticalAlignment="Bottom" Width="20" RenderTransformOrigin="0.5,0.5" Minimum="0" Maximum="100" Value="100" Height="110" Orientation="Vertical" Thumb.DragDelta="volume_slider_DragDelta"/>
         <Button Name="play_pause_button" Content="Pause" HorizontalAlignment="Left" Height="45" Margin="40,0,0,40" VerticalAlignment="Bottom" Width="45" Click="play_pause_button_Click"/>
         <Button Name="stop_button" Content="Stop" HorizontalAlignment="Left" Height="45" Margin="40,0,0,105" VerticalAlignment="Bottom" Width="45" Click="stop_button_Click"/>
-        <Slider Name="track_progress" HorizontalAlignment="Left" Height="28" Margin="184,0,0,40" VerticalAlignment="Bottom" Value="0" Width="570" Foreground="#26A5EB" Thumb.DragCompleted="track_change"/>
+        <Slider Name="track_progress" HorizontalAlignment="Left" Height="28" Margin="184,0,0,40" VerticalAlignment="Bottom" Value="0" Width="570" Thumb.DragCompleted="track_change"/>
         <Button Name="file_select" Content="Select File" HorizontalAlignment="Left" Height="45" Margin="40,40,0,0" VerticalAlignment="Top" Width="116" Click="load_button_clicked"/>
-        <Button Name="rewind_button" Content="Rewind" HorizontalAlignment="Left" Margin="184,284,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="rewind_button_Click"/>
+        <Button Name="rewind_button" Content="Rewind" HorizontalAlignment="Left" Margin="185,284,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="rewind_button_Click"/>
         <Button Name="foward_button" Content="Forward" HorizontalAlignment="Left" Margin="255,284,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="foward_button_Click"/>
+        <Button x:Name="skip_back" Content="&lt;" HorizontalAlignment="Left" Margin="325,284,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="skip_back_Click"/>
+        <Button x:Name="skip_forward" Content=">" HorizontalAlignment="Left" Margin="395,284,0,0" VerticalAlignment="Top" Height="45" Width="44" Click="skip_forward_Click"/>
+        <Image Name="cover" HorizontalAlignment="Right" Height="265" Margin="0,50,50,0" VerticalAlignment="Top" Width="265"/>
+        <Label Name="track_title_display" Content="File Unselected" Margin="40,107,350,250" FontSize="24" HorizontalContentAlignment="Center" Foreground="White" />
     </Grid>
 </Window>

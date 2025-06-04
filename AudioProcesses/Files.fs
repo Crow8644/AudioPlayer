@@ -12,6 +12,7 @@ open System.Text.RegularExpressions
 open System.Collections
 open System.Linq
 open System.Windows.Forms
+open System.Windows.Controls
 
 // directory_nav module is used as a two way enumerator to track the files around that originally selected
 // It has three members:
@@ -34,15 +35,18 @@ let userFolder: string = Environment.SpecialFolder.UserProfile |> Environment.Ge
 // We start the proccess trying to use this user profile's directory
 let mutable default_path: string = if Directory.Exists userFolder then userFolder else "c:\\"
 
-let seperateParentPath(path: string) =
+let regexSeperate(regex: string, default_ret: string, toParse: string) =
+    let m = Regex(regex).Match toParse       // Regex matches three groups: the parent folder, the file name, and the file extention
+    if m.Success
+    then [for x in m.Groups -> x.Value]                             // Composes the original string into the groups from the regex
+    else [default_ret]                                              // Default parent directory
+
+// Partial application syntax really isn't working as expected at the moment
+let seperateParentPath = fun path -> regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)$", " ", path)
     // The triple slash - \\\ - is due to an odd quirk I found with .net regexes
     // It seemingly processes escaping the regex special characters and escaping the string characters on seperate occations
     // This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
     // The triple slash is necessary for the regex to match a single slash
-    let m = Regex("^(.*\\\)([^\\\]*)(\.[^\\\]*)$").Match path       // Regex matches three groups: the parent folder, the file name, and the file extention
-    if m.Success
-    then [for x in m.Groups -> x.Value]                             // Composes the original string and two groups from the regex into a list
-    else ["c:\\"]                                                   // Default parent directory
 
 // Starts the enumerator at a specified file
 // Used to start at the current playing song when a file is selected from the middle of a directory
@@ -60,33 +64,33 @@ let advanceFile(continuing: bool): string =
     if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length && continuing
     then 
         Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))   // We do this because we have to wait until playback stops
-        directory_nav.current()                                                         // Returns the current directory as well
+        (directory_nav.current() |> seperateParentPath).Item 2                          // Returns the current file name for UI reasons
     else ""
 
 // Switches to the alphabetically previous file in the directory
 let rewindFile(): string =
-    if Sounds.getFileProgress 20 = 0 then
+    if Sounds.getFileProgress 20 = 0 then           // Goes backwards if the file is in the first 20th of its runtime
         directory_nav.pos <- directory_nav.pos - 1
 
     Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))       // Is sure to pause before requesting the track to switch
 
-    directory_nav.current()         // Returns the current directory
+    (directory_nav.current() |> seperateParentPath).Item 2                              // Returns the current directory
 
 // File Dialog Documentation, which I am referencing heavily: 
 // https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.filedialog?view=windowsdesktop-9.0
 
 // This function runs the file selection dialog and proccesses the result, ultimately initiating playback
 // 
-let getAudioFile() =
+let getAudioFile(display: ContentControl) =
     let dialog = new OpenFileDialog()
 
     // Extra protection, resets the user's home directory if the previously used directory was deleted
     if not (Directory.Exists default_path)
-    then if Directory.Exists userFolder  then default_path <- userFolder else default_path <- "c:\\"
+    then if Directory.Exists userFolder then default_path <- userFolder else default_path <- "c:\\"
 
     // Set dialog properties
     dialog.InitialDirectory <- default_path                             // Starts at the highest level
-    dialog.Filter <- "wav and mp3 files (*.wav;*.mp3)|*.wav;*.mp3"      // Only allows the selection of .wav files
+    dialog.Filter <- "wav and mp3 files (*.wav;*.mp3)|*.wav;*.mp3"      // Only allows the selection of .wav and .mp3 files
 
     // Triggers the user selection and saves whether a file was selected or cancelled
 
@@ -96,9 +100,6 @@ let getAudioFile() =
         let fileList = seperateParentPath dialog.FileName
         default_path <- fileList.Item 1             // Sets the default path to be used on next open to the parent folder of this selection
 
-        // Gets and enumerator using only approved file types
-        //file_enumerator <- Directory.EnumerateFiles(fileList.Item(1), "*.wav;*.mp3").GetEnumerator()
-
         // TODO: manually combine other file types here
         directory_nav.array <- Directory.EnumerateFiles(fileList.Item 1, "*.wav").ToArray()
         moveNavTo dialog.FileName
@@ -106,13 +107,18 @@ let getAudioFile() =
         // TODO: Save path data and send the file name to audio player
 
         Sounds.stopAndDo(fun _ -> ())                               // Waits for any currently playing audio to stop
-        if Sounds.initializeAudio(dialog.FileName, advanceFile)
+        if Sounds.initializeAudio(dialog.FileName, advanceFile, 
+            fun name -> display.Content <- name)
         then 
-            fileList.Item 2                         // Returns the name of the file
+            display.Content <- fileList.Item 2                      // Displays the name of the file
+            true
         else 
             MessageBox.Show("There was an error in playing the selected file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
-            "Error"
-    else "Unselected"                               // Returns "Unselected" when the dialog box was closed
+            display.Content <- "Error"
+            false
+    else 
+        display.Content <- "Unselected"                             // Displays "Unselected" when the dialog box was closed
+        false
 
 //Forum that solved some headaches:
 //https://stackoverflow.com/questions/9646684/cant-use-system-windows-forms

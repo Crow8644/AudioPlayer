@@ -35,13 +35,13 @@ namespace AudioPlayer
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
             Sounds.closeObjects(this);
+            
         }
 
         // Calls our FSharp code for the file dialog box every time the load file button is clicked
         private void load_button_clicked(object sender, RoutedEventArgs e)
         {
-            string x = Files.getAudioFile();
-            file_select.Content = x;
+            bool x = Files.getAudioFile(track_title_display);            
         }
 
         private void play_pause_button_Click(object sender, RoutedEventArgs e)
@@ -70,12 +70,12 @@ namespace AudioPlayer
 
         private void rewind_button_Click(object sender, RoutedEventArgs e)
         {
-            Files.rewindFile();
+            track_title_display.Content = Files.rewindFile();
         }
 
         private void foward_button_Click(object sender, RoutedEventArgs e)
         {
-            Files.advanceFile(true);
+            track_title_display.Content = Files.advanceFile(true);
         }
 
         private void update_progress_slider(object? sender, EventArgs e)
@@ -89,6 +89,16 @@ namespace AudioPlayer
         private void volume_slider_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
             Sounds.adjustVol((float)volume_slider.Value / 100.0f);
+        }
+
+        private void skip_back_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void skip_forward_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
