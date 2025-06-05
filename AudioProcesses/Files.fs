@@ -61,7 +61,6 @@ let setImage(filename: string, control: Image) =
         control.Source <- bitmap
     | None ->
         ()
-    filename                            // Passthrough the filename
 
 // Starts the enumerator at a specified file
 // Used to start at the current playing song when a file is selected from the middle of a directory

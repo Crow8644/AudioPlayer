@@ -31,7 +31,8 @@ let mutable advanceHandler: System.EventHandler<StoppedEventArgs> = null
 let stopSignal: ManualResetEvent = new ManualResetEvent(false)          // This works as a mutex and allows us to synchronize events with the playback stopping
 let switchLock: obj = new obj()                                         // .NET uses the moniter object with this to lock a code block, allowing only one thread
 
-outputDevice.PlaybackStopped.Add(fun _ -> stopSignal.Set() |> ignore)   // Links the PlaybackStopped event to a signal that can be waited on
+outputDevice.PlaybackStopped.Add(fun _ -> 
+stopSignal.Set() |> ignore)   // Links the PlaybackStopped event to a signal that can be waited on
 
 // Called when output device ends with a file path already calculated and also by rewind and foward buttons
 let switchToFile(filePath: string, playAfter: bool): unit = 
@@ -94,7 +95,8 @@ let isFileOver(): bool =
     if Monitor.TryEnter switchLock
     then
         try
-            audioFile.Length = audioFile.Position
+            // mp3s sometimes have the position continue to values above length, so we need <= instead of just <
+            audioFile.Length <= audioFile.Position
         finally
             Monitor.Exit switchLock
     else 
