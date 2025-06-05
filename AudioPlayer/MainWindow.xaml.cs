@@ -39,6 +39,10 @@ namespace AudioPlayer
             {
                 skip_forward_Click(new object(), new RoutedEventArgs());
             }
+            else if (e.Key == Key.Space)
+            {
+                play_pause_button_Click(new object(), new RoutedEventArgs());
+            }
         }
 
         private void track_change(object? sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
@@ -55,7 +59,9 @@ namespace AudioPlayer
         // Calls our FSharp code for the file dialog box every time the load file button is clicked
         private void load_button_clicked(object sender, RoutedEventArgs e)
         {
-            bool x = Files.getAudioFile(track_title_display);            
+            bool x = Files.getAudioFile(track_title_display, cover);
+            paused = !x;
+            play_pause_button.Content = (paused) ? "Play" : "Pause";
         }
 
         private void play_pause_button_Click(object sender, RoutedEventArgs e)
@@ -84,12 +90,12 @@ namespace AudioPlayer
 
         private void rewind_button_Click(object sender, RoutedEventArgs e)
         {
-            track_title_display.Content = Files.rewindFile();
+            track_title_display.Content = Files.rewindFile(cover);
         }
 
         private void foward_button_Click(object sender, RoutedEventArgs e)
         {
-            track_title_display.Content = Files.advanceFile(true);
+            track_title_display.Content = Files.advanceFile(cover, true);
         }
 
         private void update_progress_slider(object? sender, EventArgs e)

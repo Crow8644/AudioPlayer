@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Metadata.fs" />
     <Compile Include="Sounds.fs" />
     <Compile Include="Files.fs" />
     <Compile Include="Library.fs" />
@@ -15,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="z440.atl.core" Version="6.24.0" />
   </ItemGroup>
 
 </Project>

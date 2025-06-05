@@ -48,6 +48,21 @@ let seperateParentPath = fun path -> regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)
     // This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
     // The triple slash is necessary for the regex to match a single slash
 
+let matchesExtention(path: string, extentions: array<string>): bool =
+    let ext: string = Path.GetExtension(path)
+    extentions |> Array.map(fun s -> (s = ext)) |> Array.reduce(||)
+
+let isValidAudioFile = fun path -> matchesExtention(path, [|".wav"; ".mp3"; ".aiff"|])
+    
+
+let setImage(filename: string, control: Image) =
+    match Metadata.getFilePhoto(filename) with
+    | Some(bitmap) ->
+        control.Source <- bitmap
+    | None ->
+        ()
+    filename                            // Passthrough the filename
+
 // Starts the enumerator at a specified file
 // Used to start at the current playing song when a file is selected from the middle of a directory
 let moveNavTo(path: string) =
@@ -59,11 +74,12 @@ let moveNavTo(path: string) =
 
 // Calls the file switch in Sounds for the next file in the directory
 // continuing may be false if the user has chosen not to automatically advance file
-let advanceFile(continuing: bool): string =
+let advanceFile(imageControl: Image, continuing: bool): string =
     directory_nav.pos <- directory_nav.pos + 1              // We increment the counter at this point, before checking if it fits in the array
     if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length && continuing
     then 
         Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))   // We do this because we have to wait until playback stops
+        setImage(directory_nav.current(), imageControl) |> ignore
         let fileList = (directory_nav.current() |> seperateParentPath)
         if fileList.Length > 1
         then fileList.Item 2                                                            // Returns the current file name for UI reasons
@@ -71,11 +87,12 @@ let advanceFile(continuing: bool): string =
     else ""
 
 // Switches to the alphabetically previous file in the directory
-let rewindFile(): string =
+let rewindFile(imageControl: Image): string =
     if Sounds.getFileProgress 20 = 0 then           // Goes backwards if the file is in the first 20th of its runtime
         directory_nav.pos <- directory_nav.pos - 1
 
     Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))       // Is sure to pause before requesting the track to switch
+    setImage(directory_nav.current(), imageControl) |> ignore
     let fileList = (directory_nav.current() |> seperateParentPath)
     if fileList.Length > 1
     then fileList.Item 2                                                                // Returns the current file name for UI reasons
@@ -86,7 +103,7 @@ let rewindFile(): string =
 
 // This function runs the file selection dialog and proccesses the result, ultimately initiating playback
 // 
-let getAudioFile(display: ContentControl) =
+let getAudioFile(display: ContentControl, imageControl: Image) =
     let dialog = new OpenFileDialog()
 
     // Extra protection, resets the user's home directory if the previously used directory was deleted
@@ -106,16 +123,17 @@ let getAudioFile(display: ContentControl) =
         default_path <- fileList.Item 1             // Sets the default path to be used on next open to the parent folder of this selection
 
         // TODO: manually combine other file types here
-        directory_nav.array <- Directory.EnumerateFiles(fileList.Item 1, "*.wav").ToArray()
+        directory_nav.array <- Directory.EnumerateFiles(fileList.Item 1, "*").Where(isValidAudioFile).ToArray()
         moveNavTo dialog.FileName
 
         // TODO: Save path data and send the file name to audio player
 
         Sounds.stopAndDo(fun _ -> ())                                   // Waits for any currently playing audio to stop
-        if Sounds.initializeAudio(dialog.FileName, advanceFile, 
+        if Sounds.initializeAudio(dialog.FileName, (fun b -> advanceFile(imageControl, b)), 
             fun name -> display.Content <- name)
         then 
             display.Content <- fileList.Item 2                          // Displays the name of the file
+            setImage(directory_nav.current(), imageControl) |> ignore
             true
         else 
             MessageBox.Show("There was an error in playing the selected file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore

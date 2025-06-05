@@ -42,7 +42,7 @@ let switchToFile(filePath: string, playAfter: bool): unit =
         else
             try
                 audioFile.Dispose()             // Clears audioFile's current resources
-                audioFile <- new WaveFileReader(filePath)
+                audioFile <- new MediaFoundationReader(filePath)
                 outputDevice.Init audioFile     // Despite protection through pauseAndDo, this still occationally generates errors
                 if playAfter then outputDevice.Play()
             with 
@@ -89,6 +89,7 @@ let getFileProgress(resulution: int): int =
     else
         0
 
+// Tests whether the file currently represented by audioFile has reached its end
 let isFileOver(): bool = 
     if Monitor.TryEnter switchLock
     then
@@ -102,16 +103,16 @@ let isFileOver(): bool =
 let adjustVol(volume) = outputDevice.Volume <- volume
 
 // Sets up all audio objects
-let initializeAudio(file: string, nextFinder: bool->string, uiUpdates: string->unit): bool = 
+let initializeAudio(file: string, fileOperations: bool->string, uiUpdates: string->unit): bool = 
     lock switchLock (fun _ ->
         outputDevice.PlaybackStopped.RemoveHandler advanceHandler
         try
-            audioFile <- new WaveFileReader(file)  // Needs to be recreated for every new track
+            audioFile <- new MediaFoundationReader(file)  // Needs to be recreated for every new track
             outputDevice.Init audioFile
 
             // Composes a function to be called by the PlaybackStopped event
             // This is has the cumulative effect of allowing access to file data from the not-yet-compiled Files module
-            let stop(args: StoppedEventArgs) = if isFileOver() then continuing |> nextFinder |> uiUpdates else ()
+            let stop(args: StoppedEventArgs) = if isFileOver() then continuing |> fileOperations |> uiUpdates else ()
             advanceHandler <- System.EventHandler<StoppedEventArgs>(fun (a: obj) -> stop)
             outputDevice.PlaybackStopped.AddHandler advanceHandler
 
