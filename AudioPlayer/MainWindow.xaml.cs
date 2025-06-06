@@ -124,7 +124,6 @@ namespace AudioPlayer
 }
 
 // References:
-// https://learn.microsoft.com/en-us/dotnet/desktop/wpf/controls/how-to-create-a-button-that-has-an-image
 // https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.progressbar?view=windowsdesktop-9.0
 // https://connelhooley.uk/blog/2017/04/30/f-sharp-to-c-sharp/
 // https://www.christianfindlay.com/blog/how-to-use-fsharp-and-csharp
