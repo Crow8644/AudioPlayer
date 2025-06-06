@@ -169,6 +169,18 @@ let stopAndDo(nextAction: _->unit) =
         raise (SignalError("Signals for sound pausing encountered an error"))
         ()
 
+// Stops the playback device and waits for it to be send the stop signal
+let stopAndWait() =
+    if (not (outputDevice.PlaybackState = PlaybackState.Stopped))
+    then
+        if stopSignal.Reset() then
+            outputDevice.Stop()
+            stopSignal.WaitOne() |> ignore          // Won't return until the signal is given
+        else
+            outputDevice.Stop()
+    else
+        ()
+
 // -- Cleanup Functions -- //
 
 // This clears up resources at the end of the program,

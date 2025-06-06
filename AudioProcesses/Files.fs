@@ -8,7 +8,6 @@ open System
 open System.Windows
 open System.IO
 open System.Threading.Tasks
-open System.Text.RegularExpressions
 open System.Collections
 open System.Linq
 open System.Windows.Forms
@@ -35,25 +34,14 @@ let userFolder: string = Environment.SpecialFolder.UserProfile |> Environment.Ge
 // We start the proccess trying to use this user profile's directory
 let mutable default_path: string = if Directory.Exists userFolder then userFolder else "c:\\"
 
-let regexSeperate(regex: string, default_ret: string, toParse: string) =
-    let m = Regex(regex).Match toParse       // Regex matches three groups: the parent folder, the file name, and the file extention
-    if m.Success
-    then [for x in m.Groups -> x.Value]                             // Composes the original string into the groups from the regex
-    else [default_ret]                                              // Default parent directory
-
 // Partial application syntax really isn't working as expected at the moment
-let seperateParentPath = fun path -> regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)$", "c:\\", path)
+let seperateParentPath = fun path -> Utilities.regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)$", "c:\\", path)
     // The triple slash - \\\ - is due to an odd quirk I found with .net regexes
     // It seemingly processes escaping the regex special characters and escaping the string characters on seperate occations
     // This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
     // The triple slash is necessary for the regex to match a single slash
 
-let matchesExtention(path: string, extentions: array<string>): bool =
-    let ext: string = Path.GetExtension(path)
-    extentions |> Array.map(fun s -> (s = ext)) |> Array.reduce(||)
-
-let isValidAudioFile = fun path -> matchesExtention(path, [|".wav"; ".mp3"; ".aiff"|])
-    
+let isValidAudioFile = fun path -> Utilities.matchesExtention(path, [|".wav"; ".mp3"; ".aiff"|])
 
 let setImage(filename: string, control: Image) =
     match Metadata.getFilePhoto(filename) with
@@ -75,7 +63,7 @@ let moveNavTo(path: string) =
 // continuing may be false if the user has chosen not to automatically advance file
 let advanceFile(imageControl: Image, continuing: bool): string =
     directory_nav.pos <- directory_nav.pos + 1              // We increment the counter at this point, before checking if it fits in the array
-    if 0 <= directory_nav.pos && directory_nav.pos < directory_nav.array.Length && continuing
+    if directory_nav.pos < directory_nav.array.Length && continuing
     then 
         Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))   // We do this because we have to wait until playback stops
         setImage(directory_nav.current(), imageControl) |> ignore
@@ -87,7 +75,7 @@ let advanceFile(imageControl: Image, continuing: bool): string =
 
 // Switches to the alphabetically previous file in the directory
 let rewindFile(imageControl: Image): string =
-    if Sounds.getFileProgress 20 = 0 then           // Goes backwards if the file is in the first 20th of its runtime
+    if Sounds.getFileProgress 20 = 0 && directory_nav.pos > 0 then           // Goes backwards if the file is in the first 20th of its runtime
         directory_nav.pos <- directory_nav.pos - 1
 
     Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))       // Is sure to pause before requesting the track to switch
@@ -127,7 +115,6 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
 
         // TODO: Save path data and send the file name to audio player
 
-        Sounds.stopAndDo(fun _ -> ())                                   // Waits for any currently playing audio to stop
         if Sounds.initializeAudio(dialog.FileName, (fun b -> advanceFile(imageControl, b)), 
             fun name -> display.Content <- name)
         then 
@@ -141,6 +128,7 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
     else 
         display.Content <- "Unselected"                                 // Displays "Unselected" when the dialog box was closed
         false
+    
 
 //Forum that solved some headaches:
 //https://stackoverflow.com/questions/9646684/cant-use-system-windows-forms

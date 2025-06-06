@@ -8,9 +8,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-
-// Our F# Files:
-using AudioProcesses;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace AudioPlayer
 {
@@ -53,15 +52,23 @@ namespace AudioPlayer
         private void MainWindow_Closed(object? sender, EventArgs e)
         {
             Sounds.closeObjects(this);
-            
         }
 
         // Calls our FSharp code for the file dialog box every time the load file button is clicked
         private void load_button_clicked(object sender, RoutedEventArgs e)
         {
-            bool x = Files.getAudioFile(track_title_display, cover);
-            paused = !x;
-            play_pause_button.Content = (paused) ? "Play" : "Pause";
+            // Thank you so much to https://stackoverflow.com/a/4331287/503969 for solving a huge bug
+            // We need to stop the playback in a different SynchronizationContext before returning and loading using this SynchronizationContext
+            void internalLoad(Task oldTask)
+            {
+                bool x = Files.getAudioFile(track_title_display, cover);
+                paused = !x;
+                play_pause_button.Content = (paused) ? "Play" : "Pause";
+            }
+            Task t = new Task(Sounds.stopAndWait);
+            Task UITask = t.ContinueWith(internalLoad, TaskScheduler.FromCurrentSynchronizationContext());
+
+            t.Start();
         }
 
         private void play_pause_button_Click(object sender, RoutedEventArgs e)
@@ -108,7 +115,8 @@ namespace AudioPlayer
 
         private void volume_slider_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
-            Sounds.adjustVol((float)volume_slider.Value / 100.0f);
+            // Scales the volume slider by a power of two, which sounds more natural
+            Sounds.adjustVol((float)Math.Pow(volume_slider.Value / 100.0, 2));
         }
 
         private void skip_back_Click(object sender, RoutedEventArgs e)

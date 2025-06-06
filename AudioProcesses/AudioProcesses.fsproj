@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Metadata.fs" />
-    <Compile Include="Sounds.fs" />
-    <Compile Include="Files.fs" />
-    <Compile Include="Library.fs" />
+	  <Compile Include="Utilities.fs" />
+	  <Compile Include="Metadata.fs" />
+	  <Compile Include="Sounds.fs" />
+	  <Compile Include="Files.fs" />
   </ItemGroup>
 
   <ItemGroup>
