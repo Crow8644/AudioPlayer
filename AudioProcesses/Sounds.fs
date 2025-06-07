@@ -1,8 +1,12 @@
-﻿module Sounds
+﻿// This module contains all the functions that work directly with the output and audio devices
+// Uses NAudio: https://github.com/naudio
+// By: Caleb Ausema
+// Created 5/25/2025
+
+module Sounds
 
 // Contains all of the resources for working with audio device drivers:
 open NAudio.Wave
-open NAudio.Wave.SampleProviders
 open System.Threading
 open System.Threading.Tasks
 open System.Windows.Forms
@@ -13,14 +17,10 @@ open System.Windows.Forms
 
 exception SignalError of string
 
-// Examples and Documentation for NAudio:
-// General page: https://github.com/naudio/NAudio?tab=readme-ov-file
-// https://github.com/naudio/NAudio/blob/master/Docs/PlayAudioFileWinForms.md
-// https://github.com/naudio/NAudio/blob/master/Docs/PlaybackStopped.md
-
 // This entire module is dedicated to handling these two objects:
 let outputDevice: WaveOutEvent = new WaveOutEvent()         // We just keep one device variable and set its details dynamically
 let mutable audioFile: WaveStream = null                    // This object will need to be recreated every time the user changes files
+let syncContext = SynchronizationContext.Current            // Saves the context in which the outputDevice was made, because we can't access that property directly
 
 let mutable continuing: bool = true                         // Whether or not to automatically advance the file
 
@@ -127,16 +127,26 @@ let initializeAudio(file: string, fileOperations: bool->string, uiUpdates: strin
 
 
 // -- Public Use Control Functions -- //
+// All return true if successful and false if not
 let play(button) =
-    outputDevice.Play()
+    try
+        outputDevice.Play()
+        true
+    with | ex -> false
 
 let pause() =
-    outputDevice.Pause()
+    try
+        outputDevice.Pause()
+        true
+    with | ex -> false
 
 // Ends the audio device playback, using Stop so playbackStopped will be signalled
 let stop() =
-    outputDevice.Stop()         // A very sudden stop to the audio
-    changeFilePostitionTo(0)    // Resets the file when audio is stopped
+    try
+        outputDevice.Stop()         // A very sudden stop to the audio
+        changeFilePostitionTo(0)    // Resets the file when audio is stopped
+        true
+    with | ex -> false
 
 
 // -- More Internal Control Functions -- //
@@ -150,21 +160,19 @@ let stopAndDo(nextAction: _->unit) =
     then 
         nextAction()
     // stopSignal may have been set several times before this point, so we need to reset it
-    elif stopSignal.Reset() then                  // Reset will return a true if successful and a false if not
+    elif stopSignal.Reset() then                    // Reset will return a true if successful and a false if not
 
         // IMPORTANT: Because the event handlers for PlaybackStopped are ran in the thread stop was called from,
         // The program freezes if we call stop and wait in the same thread
         // Moreover, for reasons that I don't understand, pausing the device must be done in the main thread
         let parellel() =
-            stopSignal.WaitOne() |> ignore      // Wait for the playbackStopped signal
-            nextAction()                        // Excecute the requested action
+            stopSignal.WaitOne() |> ignore          // Wait for the playbackStopped signal
+            nextAction()                            // Excecute the requested action
             
-        let t: Task = new Task(parellel)        // Sets the task with internal function
-        t.Start()                               // Begins the task
+        let t: Task = new Task(parellel)            // Sets the task with internal function
+        t.Start()                                   // Begins the task
 
-        outputDevice.Stop()                     // Pause the audio and signal playbackStopped, causing our other thread to run its actions
-
-        //t.Wait()                                // Waits for the thread to finish
+        outputDevice.Stop()                         // Pause the audio and signal playbackStopped, causing our other thread to run its actions
     else
         raise (SignalError("Signals for sound pausing encountered an error"))
         ()
@@ -173,7 +181,7 @@ let stopAndDo(nextAction: _->unit) =
 let stopAndWait() =
     if (not (outputDevice.PlaybackState = PlaybackState.Stopped))
     then
-        if stopSignal.Reset() then
+        if (not (syncContext = SynchronizationContext.Current)) && stopSignal.Reset() then
             outputDevice.Stop()
             stopSignal.WaitOne() |> ignore          // Won't return until the signal is given
         else
@@ -185,7 +193,7 @@ let stopAndWait() =
 
 // This clears up resources at the end of the program,
 // Only to be called as part of the window-close handler
-let closeObjects(window) =
+let closeObjects(window: System.Windows.Window) =
     stopAndDo(fun _ ->          // Ensure the stream is already stopped before disposing of resources
         outputDevice.Dispose()
         // audioFile might not exist (in which case we have no need of disposing)
@@ -198,7 +206,12 @@ let closeObjects(window) =
                 audioFile.Dispose()
         with | ex -> ()         // An error here is not a problem, we just return unit
     )
+    // TODO: Save any persistant values
 
 // Referenced Documentation:
 // https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/values/null-values
 // https://markheath.net/post/naudio-wavestream-in-depth
+// --NAudio--:
+// General page: https://github.com/naudio/NAudio?tab=readme-ov-file
+// https://github.com/naudio/NAudio/blob/master/Docs/PlayAudioFileWinForms.md
+// https://github.com/naudio/NAudio/blob/master/Docs/PlaybackStopped.md

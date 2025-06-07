@@ -1,6 +1,10 @@
-﻿module Metadata
+﻿// This module holds functions to access and work with the metadata for the audio file
+// Uses ATL: https://github.com/Zeugma440/atldotnet
+// By: Caleb Ausema
+// Created 6/05/2025
+
+module Metadata
 open ATL
-open ATL.AudioData
 open System.Windows.Media.Imaging
 open System.IO
 
@@ -20,6 +24,6 @@ let getFilePhoto(filePath: string): Option<BitmapFrame> =
 let getArtist(filePath: string): Option<string> =
     let track: Track = new Track(filePath)
     let artist: string = track.Artist
-    if not (artist = "")
+    if not (artist = "")                // Tests if there really was an artist embedded in the file
     then Some artist
     else None

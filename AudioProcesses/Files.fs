@@ -5,10 +5,7 @@
 module Files            // Because F Sharp doesn't set namespaces for files be default, we have to be intentional about it
 
 open System
-open System.Windows
 open System.IO
-open System.Threading.Tasks
-open System.Collections
 open System.Linq
 open System.Windows.Forms
 open System.Windows.Controls
@@ -34,13 +31,15 @@ let userFolder: string = Environment.SpecialFolder.UserProfile |> Environment.Ge
 // We start the proccess trying to use this user profile's directory
 let mutable default_path: string = if Directory.Exists userFolder then userFolder else "c:\\"
 
-// Partial application syntax really isn't working as expected at the moment
-let seperateParentPath = fun path -> Utilities.regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)$", "c:\\", path)
-    // The triple slash - \\\ - is due to an odd quirk I found with .net regexes
-    // It seemingly processes escaping the regex special characters and escaping the string characters on seperate occations
-    // This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
-    // The triple slash is necessary for the regex to match a single slash
+// -- Partially applied utility functions -- //
 
+// The triple slash - \\\ - is due to an odd quirk I found with .net regexes
+// It seemingly processes escaping the regex special characters and escaping the string characters on seperate occations
+// This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
+// The triple slash is necessary for the regex to match a single slash
+let seperateParentPath = fun path -> Utilities.regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)$", default_path, path)
+
+// wav, mp3, aiff, and wma are the four currently supported extentions
 let isValidAudioFile = fun path -> Utilities.matchesExtention(path, [|".wav"; ".mp3"; ".aiff"; "wma"|])
 
 let setImage(filename: string, control: Image) =
@@ -48,21 +47,17 @@ let setImage(filename: string, control: Image) =
     | Some(bitmap) ->
         control.Source <- bitmap
     | None ->
-        ()
+        ()                          // TODO: Add default file photo
 
 // Starts the enumerator at a specified file
 // Used to start at the current playing song when a file is selected from the middle of a directory
 let moveNavTo(path: string) =
     directory_nav.pos <- Array.BinarySearch(directory_nav.array, path)
-    (*
-    while not (path = (string)file_enumerator.Current) && file_enumerator.MoveNext() do
-        true |> ignore      // No need to do anything here
-    *)
 
 // Calls the file switch in Sounds for the next file in the directory
 // continuing may be false if the user has chosen not to automatically advance file
 let advanceFile(imageControl: Image, continuing: bool): string =
-    directory_nav.pos <- directory_nav.pos + 1              // We increment the counter at this point, before checking if it fits in the array
+    directory_nav.pos <- directory_nav.pos + 1                                          // We increment the counter at this point, before checking if it fits in the array
     if directory_nav.pos < directory_nav.array.Length && continuing
     then 
         Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))   // We do this because we have to wait until playback stops
@@ -89,7 +84,7 @@ let rewindFile(imageControl: Image): string =
 // https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.filedialog?view=windowsdesktop-9.0
 
 // This function runs the file selection dialog and proccesses the result, ultimately initiating playback
-// 
+// Must run in the UI thread
 let getAudioFile(display: ContentControl, imageControl: Image) =
     let dialog = new OpenFileDialog()
 
@@ -107,26 +102,29 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
         then
         //Setting up file if selection was a success
         let fileList = seperateParentPath dialog.FileName
-        default_path <- fileList.Item 1             // Sets the default path to be used on next open to the parent folder of this selection
+        // Sets the default path to be used on next open to the parent folder of this selection
+        default_path <- if fileList.Length > 1 then fileList.Item 1 else fileList.Item 0
 
-        // TODO: manually combine other file types here
-        directory_nav.array <- Directory.EnumerateFiles(fileList.Item 1, "*").Where(isValidAudioFile).ToArray()
-        moveNavTo dialog.FileName
-
-        // TODO: Save path data and send the file name to audio player
+        if fileList.Length > 0
+        then
+            directory_nav.array <- Directory.EnumerateFiles(fileList.Item 1, "*").Where(isValidAudioFile).ToArray()
+            moveNavTo dialog.FileName                   // Starts our enumerator at the file that has been selected
+        else
+            directory_nav.array <- [||]                 // Reset to a blank array
 
         if Sounds.initializeAudio(dialog.FileName, (fun b -> advanceFile(imageControl, b)), 
             fun name -> display.Content <- name)
         then 
-            display.Content <- fileList.Item 2                          // Displays the name of the file
-            setImage(directory_nav.current(), imageControl) |> ignore
+            display.Content <- if fileList.Length > 1 then fileList.Item 2 else dialog.FileName     // Displays the name of the file
+            setImage(directory_nav.current(), imageControl)
             true
         else 
             MessageBox.Show("There was an error in playing the selected file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
-            display.Content <- "Error"
+            display.Content <- "Error"                                                              // Displays an error and 
             false
     else 
-        display.Content <- "Unselected"                                 // Displays "Unselected" when the dialog box was closed
+        display.Content <- "Unselected"                                                             // Leaves display the same when the dialog box was closed
+        Sounds.play() |> ignore                                                                     // Tries to restart the audio, if it exists
         false
     
 

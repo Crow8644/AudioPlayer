@@ -80,15 +80,18 @@ namespace AudioPlayer
             // Toggle logic for the button that plays and pauses audio
             if (paused)
             {
-                Sounds.play(sender);
-                play_pause_button.Content = "Pause";
-                paused = false;
+                if (Sounds.play(sender)) {
+                    play_pause_button.Content = "Pause";
+                    paused = false;
+                }
             }
             else
             {
-                Sounds.pause();
-                play_pause_button.Content = "Play";
-                paused = true;
+                if (Sounds.pause())
+                {
+                    play_pause_button.Content = "Play";
+                    paused = true;
+                }
             }
         }
 
