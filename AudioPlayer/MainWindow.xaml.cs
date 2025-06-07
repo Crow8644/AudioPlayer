@@ -19,12 +19,16 @@ namespace AudioPlayer
     public partial class MainWindow : Window
     {
         private bool paused = false;
+        private double lastVolState;
+        
         public MainWindow()
         {
             InitializeComponent();
             Closed += MainWindow_Closed;
             KeyDown += MainWindow_KeyDown;
             CompositionTarget.Rendering += update_progress_slider;
+            lastVolState = 100;
+            mute_button.IsChecked = false;
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
@@ -117,6 +121,7 @@ namespace AudioPlayer
         {
             // Scales the volume slider by a power of two, which sounds more natural
             Sounds.adjustVol((float)Math.Pow(volume_slider.Value / 100.0, 2));
+            mute_button.IsChecked = false;
         }
 
         private void skip_back_Click(object sender, RoutedEventArgs e)
@@ -127,6 +132,19 @@ namespace AudioPlayer
         private void skip_forward_Click(object sender, RoutedEventArgs e)
         {
             Sounds.skip(5);
+        }
+
+        private void mute_button_Checked(object sender, RoutedEventArgs e)
+        {
+            lastVolState = volume_slider.Value;
+            volume_slider.Value = 0;
+            Sounds.adjustVol(0.0f);
+        }
+
+        private void mute_button_Unchecked(object sender, RoutedEventArgs e)
+        {
+            volume_slider.Value = lastVolState;
+            Sounds.adjustVol((float)Math.Pow(lastVolState / 100.0, 2));
         }
     }
 }
