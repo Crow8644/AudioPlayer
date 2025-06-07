@@ -17,3 +17,9 @@ let getFilePhoto(filePath: string): Option<BitmapFrame> =
     else
         None
     
+let getArtist(filePath: string): Option<string> =
+    let track: Track = new Track(filePath)
+    let artist: string = track.Artist
+    if not (artist = "")
+    then Some artist
+    else None

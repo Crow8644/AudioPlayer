@@ -41,7 +41,7 @@ let seperateParentPath = fun path -> Utilities.regexSeperate("^(.*\\\)([^\\\]*)(
     // This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
     // The triple slash is necessary for the regex to match a single slash
 
-let isValidAudioFile = fun path -> Utilities.matchesExtention(path, [|".wav"; ".mp3"; ".aiff"|])
+let isValidAudioFile = fun path -> Utilities.matchesExtention(path, [|".wav"; ".mp3"; ".aiff"; "wma"|])
 
 let setImage(filename: string, control: Image) =
     match Metadata.getFilePhoto(filename) with
@@ -99,7 +99,7 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
 
     // Set dialog properties
     dialog.InitialDirectory <- default_path                             // Starts at the highest level
-    dialog.Filter <- "wav and mp3 files (*.wav;*.mp3)|*.wav;*.mp3"      // Only allows the selection of .wav and .mp3 files
+    dialog.Filter <- "supported audio files (*.wav;*.mp3;.aiff;.wma)|*.wav;*.mp3;*.aiff;*.wma"      // Only allows the selection of .wav and .mp3 files
 
     // Triggers the user selection and saves whether a file was selected or cancelled
 
