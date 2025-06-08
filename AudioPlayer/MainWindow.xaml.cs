@@ -149,6 +149,27 @@ namespace AudioPlayer
             volume_slider.Value = lastVolState;
             Sounds.adjustVol((float)Math.Pow(lastVolState / 100.0, 2));
         }
+
+        /*
+        private void auto_advance_button_Checked(object sender, RoutedEventArgs e)
+        {
+            Sounds.continuing = true;
+        }
+
+        private void auto_advance_button_Unchecked(object sender, RoutedEventArgs e)
+        {
+            Sounds.continuing = false;
+        }
+        */
+
+        public ContentControl getTrackTitleDisplay()
+        {
+            return track_title_display;
+        }
+        public Image getImageControl()
+        {
+            return cover;
+        }
     }
 }
 

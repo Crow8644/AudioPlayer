@@ -5,10 +5,24 @@ using System.Windows;
 namespace AudioPlayer
 {
     /// <summary>
-    /// Interaction logic for App.xaml
+    /// This file handles the passing of cmd-line args
     /// </summary>
     public partial class App : Application
     {
+        
+        private void Application_Startup(object sender, StartupEventArgs e)
+        {
+            MainWindow window = new MainWindow();
+            window.Show();
+            if (e.Args.Length > 0)
+            {
+                // Gets the controls from the window and passes that to Files
+                // Using this function skips the dialog openning and stop-wait proccess but completes the file setup
+                Files.setupAudioFile(e.Args[0], window.getTrackTitleDisplay(), window.getImageControl());
+            }
+        }
     }
-
 }
+
+// Referenced:
+// https://wpf-tutorial.com/wpf-application/working-with-app-xaml/

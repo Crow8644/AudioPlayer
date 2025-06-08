@@ -68,6 +68,36 @@ let advanceFile(imageControl: Image, continuing: bool): string =
         else directory_nav.current()
     else ""
 
+// Seperated from below function to allow command line parsing
+let setupAudioFile(file: string, display: ContentControl, imageControl: Image) = 
+    if File.Exists file
+    then
+        let fileList = seperateParentPath file
+        // Sets the default path to be used on next open to the parent folder of this selection
+        default_path <- if fileList.Length > 1 then fileList.Item 1 else fileList.Item 0
+
+        if fileList.Length > 0
+        then
+            directory_nav.array <- Directory.EnumerateFiles(fileList.Item 1, "*").Where(isValidAudioFile).ToArray()
+            moveNavTo file                         // Starts our enumerator at the file that has been selected
+        else
+            directory_nav.array <- [||]                 // Reset to a blank array
+
+        if Sounds.initializeAudio(file, (fun b -> advanceFile(imageControl, b)), 
+            fun name -> display.Content <- name)
+        then 
+            display.Content <- if fileList.Length > 1 then fileList.Item 2 else file                // Displays the name of the file
+            setImage(directory_nav.current(), imageControl)
+            true
+        else 
+            MessageBox.Show("There was an error in playing the selected file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
+            display.Content <- "Error"                                                              // Displays an error and returns false 
+            false
+    else
+        MessageBox.Show("The selected file does not exist", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
+        display.Content <- "Error"                                                                  // Displays an error on the main window
+        false
+
 // Switches to the alphabetically previous file in the directory
 let rewindFile(imageControl: Image): string =
     if Sounds.getFileProgress 20 = 0 && directory_nav.pos > 0 then           // Goes backwards if the file is in the first 20th of its runtime
@@ -100,33 +130,12 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
 
     if dialog.ShowDialog() = System.Windows.Forms.DialogResult.OK
         then
-        //Setting up file if selection was a success
-        let fileList = seperateParentPath dialog.FileName
-        // Sets the default path to be used on next open to the parent folder of this selection
-        default_path <- if fileList.Length > 1 then fileList.Item 1 else fileList.Item 0
-
-        if fileList.Length > 0
-        then
-            directory_nav.array <- Directory.EnumerateFiles(fileList.Item 1, "*").Where(isValidAudioFile).ToArray()
-            moveNavTo dialog.FileName                   // Starts our enumerator at the file that has been selected
-        else
-            directory_nav.array <- [||]                 // Reset to a blank array
-
-        if Sounds.initializeAudio(dialog.FileName, (fun b -> advanceFile(imageControl, b)), 
-            fun name -> display.Content <- name)
-        then 
-            display.Content <- if fileList.Length > 1 then fileList.Item 2 else dialog.FileName     // Displays the name of the file
-            setImage(directory_nav.current(), imageControl)
-            true
-        else 
-            MessageBox.Show("There was an error in playing the selected file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
-            display.Content <- "Error"                                                              // Displays an error and 
-            false
+        //If selection was a success
+        setupAudioFile(dialog.FileName, display, imageControl)
     else 
         display.Content <- "Unselected"                                                             // Leaves display the same when the dialog box was closed
         Sounds.play() |> ignore                                                                     // Tries to restart the audio, if it exists
         false
-    
 
 //Forum that solved some headaches:
 //https://stackoverflow.com/questions/9646684/cant-use-system-windows-forms
