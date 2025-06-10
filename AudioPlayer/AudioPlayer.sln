@@ -5,7 +5,12 @@ VisualStudioVersion = 17.11.35303.130
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AudioPlayer", "AudioPlayer.csproj", "{D2A38174-A6F6-46FE-8CBF-2C5B76B6560E}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AudioProcesses", "..\AudioProcesses\AudioProcesses.fsproj", "{4CCAB99F-C950-411E-8268-9B1798EDBA5C}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "AudioProcesses", "..\AudioProcesses\AudioProcesses.fsproj", "{4CCAB99F-C950-411E-8268-9B1798EDBA5C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8E6EBAB5-AF7F-4C33-BF55-3D645E99C6DA}"
+	ProjectSection(SolutionItems) = preProject
+		..\DefaultCoverPlain.png = ..\DefaultCoverPlain.png
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

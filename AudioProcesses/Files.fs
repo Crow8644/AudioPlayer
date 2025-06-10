@@ -9,6 +9,10 @@ open System.IO
 open System.Linq
 open System.Windows.Forms
 open System.Windows.Controls
+open System.Windows.Media.Imaging
+open System.Resources
+//open System.Drawing
+open System.Reflection
 
 // directory_nav module is used as a two way enumerator to track the files around that originally selected
 // It has three members:
@@ -42,12 +46,19 @@ let seperateParentPath = fun path -> Utilities.regexSeperate("^(.*\\\)([^\\\]*)(
 // wav, mp3, aiff, and wma are the four currently supported extentions
 let isValidAudioFile = fun path -> Utilities.matchesExtention(path, [|".wav"; ".mp3"; ".aiff"; "wma"|])
 
-let setImage(filename: string, control: Image) =
+let setImage(filename: string, control: System.Windows.Controls.Image) =
     match Metadata.getFilePhoto(filename) with
     | Some(bitmap) ->
         control.Source <- bitmap
     | None ->
-        ()                          // TODO: Add default file photo
+        let coverStream: Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DefaultCoverPlain.png")
+        
+        let defaultFrame = BitmapFrame.Create(coverStream, BitmapCreateOptions.None,BitmapCacheOption.OnLoad)
+
+        control.Source <- defaultFrame
+    // Image Resource Citations:
+    // https://www.codeproject.com/Articles/13573/Extracting-Embedded-Images-From-An-Assembly
+    // https://learn.microsoft.com/en-us/dotnet/desktop/wpf/advanced/how-to-use-resources-in-localizable-applications
 
 // Starts the enumerator at a specified file
 // Used to start at the current playing song when a file is selected from the middle of a directory

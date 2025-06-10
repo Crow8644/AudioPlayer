@@ -71,6 +71,7 @@ namespace AudioPlayer
             }
             Task t = new Task(Sounds.stopAndWait);
             Task UITask = t.ContinueWith(internalLoad, TaskScheduler.FromCurrentSynchronizationContext());
+            
 
             t.Start();
         }
