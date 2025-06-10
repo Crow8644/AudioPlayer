@@ -24,11 +24,15 @@ namespace AudioPlayer
         public MainWindow()
         {
             InitializeComponent();
+
+            // Add events:
             Closed += MainWindow_Closed;
             KeyDown += MainWindow_KeyDown;
-            CompositionTarget.Rendering += update_progress_slider;
+            CompositionTarget.Rendering += update_progress_slider;      // Framewise event
+
+            // Manually reset mute button and volume to avoid errors:
             lastVolState = 100;
-            mute_button.IsChecked = false;
+            mute_button.IsChecked = false;                          
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
@@ -116,7 +120,7 @@ namespace AudioPlayer
         private void update_progress_slider(object? sender, EventArgs e)
         {
             float progress = Sounds.getFileProgress((int)track_progress.Width);
-            if (progress >= 0 && !track_progress.IsMouseCaptureWithin) {
+            if (progress > 0 && !track_progress.IsMouseCaptureWithin) {
                 track_progress.Value = progress / ((float)track_progress.Width / 10.0f); // We divide by ten because the slider is out of ten
             }
         }

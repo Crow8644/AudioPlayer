@@ -51,7 +51,7 @@ let setImage(filename: string, control: System.Windows.Controls.Image) =
     | Some(bitmap) ->
         control.Source <- bitmap
     | None ->
-        let coverStream: Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DefaultCoverPlain.png")
+        let coverStream: Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DefaultCoverAdjusted.png")
         
         let defaultFrame = BitmapFrame.Create(coverStream, BitmapCreateOptions.None,BitmapCacheOption.OnLoad)
 

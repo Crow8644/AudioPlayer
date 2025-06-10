@@ -8,15 +8,15 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OtherFlags>--resource:DefaultCoverPlain.png</OtherFlags>
+    <OtherFlags>--resource:DefaultCoverAdjusted.png</OtherFlags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OtherFlags>--resource:DefaultCoverPlain.png</OtherFlags>
+    <OtherFlags>--resource:DefaultCoverAdjusted.png</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>
-	  <Resource Include="DefaultCoverPlain.png">
+	  <Resource Include="DefaultCoverAdjusted.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Compile Include="Utilities.fs" />
@@ -24,6 +24,8 @@
 	  <Compile Include="Sounds.fs" />
 	  <Compile Include="Files.fs" />
   </ItemGroup>
+
+  <ItemGroup />
 
   <ItemGroup>
     <Folder Include="Properties\" />

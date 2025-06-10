@@ -111,7 +111,7 @@
                     <Track x:Name="PART_Track" Grid.Row="1">
                         <!-- The repeat buttons give overlay format to the done and undone parts of the track -->
                         <Track.DecreaseRepeatButton>
-                            <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Style="{StaticResource RepeatButtonTransparent}" Background="BlueViolet" Height="4"/>
+                            <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Style="{StaticResource RepeatButtonTransparent}" Background="#8F9EDE" Height="4"/>
                         </Track.DecreaseRepeatButton>
                         <Track.IncreaseRepeatButton>
                             <RepeatButton Command="{x:Static Slider.IncreaseLarge}" Style="{StaticResource RepeatButtonTransparent}"/>
@@ -146,25 +146,34 @@
             </ControlTemplate.Triggers>
         </ControlTemplate>
     </Window.Resources>
-    <Grid Background="#554D7A">
+    <Grid Background="#5E5B69">
         <Grid.Resources>
         </Grid.Resources>
-        <Slider Name="volume_slider" HorizontalAlignment="Left" Margin="35,0,0,30" VerticalAlignment="Bottom" Width="20" RenderTransformOrigin="0.5,0.5" Minimum="0" Maximum="100" Value="100" Height="124" Orientation="Vertical" Thumb.DragDelta="volume_slider_DragDelta"/>
-        <Button Name="play_pause_button" Content="Pause" HorizontalAlignment="Left" Height="63" Margin="133,0,0,235" VerticalAlignment="Bottom" Width="63" Click="play_pause_button_Click"/>
-        <Button Name="stop_button" Content="Stop" HorizontalAlignment="Left" Height="45" Margin="202,0,0,85" VerticalAlignment="Bottom" Width="46" Click="stop_button_Click"/>
-        <Slider Template="{DynamicResource ProgressSliderTemplate}" Name="track_progress" HorizontalAlignment="Left" Height="28" Margin="80,0,0,31" VerticalAlignment="Bottom" Value="0" Width="674" Thumb.DragCompleted="track_change">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="205*"/>
+            <RowDefinition Height="319*"/>
+        </Grid.RowDefinitions>
+        <Slider Name="volume_slider" HorizontalAlignment="Left" Margin="32,0,0,30" VerticalAlignment="Bottom" Width="20" RenderTransformOrigin="0.5,0.5" Minimum="0" Maximum="100" Value="100" Height="124" Orientation="Vertical" Thumb.DragDelta="volume_slider_DragDelta" Grid.Row="1"/>
+        <Slider Template="{DynamicResource ProgressSliderTemplate}" Name="track_progress" Height="28" Margin="80,0,0,30" VerticalAlignment="Bottom" Value="0" Thumb.DragCompleted="track_change" HorizontalAlignment="Left" Width="690" Grid.Row="1">
             <Slider.Resources>
 
             </Slider.Resources>
         </Slider>
         <Button Name="file_select" Content="Select File" HorizontalAlignment="Left" Height="45" Margin="40,40,0,0" VerticalAlignment="Top" Width="116" Click="load_button_clicked"/>
-        <Button Name="rewind_button" Content="Rewind" HorizontalAlignment="Left" Margin="120,394,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="rewind_button_Click"/>
-        <Button Name="foward_button" Content="Forward" HorizontalAlignment="Left" Margin="286,394,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="foward_button_Click"/>
-        <Button x:Name="skip_back" Content="&lt;" HorizontalAlignment="Left" Margin="45,235,0,0" VerticalAlignment="Top" Height="45" Width="45" Click="skip_back_Click"/>
-        <Button x:Name="skip_forward" Content=">" HorizontalAlignment="Left" Margin="241,235,0,0" VerticalAlignment="Top" Height="45" Width="44" Click="skip_forward_Click"/>
-        <Image Name="cover" HorizontalAlignment="Right" Height="380" Margin="0,40,40,0" VerticalAlignment="Top" Width="380"/>
-        <Label Name="track_title_display" Content="File Unselected" Margin="35,107,452,332" FontSize="24" HorizontalContentAlignment="Center" Foreground="White" />
-        <CheckBox Name="mute_button" Content="" HorizontalAlignment="Left" Margin="36,0,0,169" VerticalAlignment="Bottom" Checked="mute_button_Checked" Unchecked="mute_button_Unchecked"/>
+        <!-- Secondary button group -->
+        <Button Name="rewind_button" Content="Rewind" HorizontalAlignment="Left" Margin="109,0,0,85" VerticalAlignment="Bottom" Height="51" Width="68" Click="rewind_button_Click" Grid.Row="1"/>
+        <Button Name="foward_button" Content="Forward" HorizontalAlignment="Left" Margin="272,0,0,85" VerticalAlignment="Bottom" Height="51" Width="68" Click="foward_button_Click" Grid.Row="1"/>
+        <Button Name="stop_button" Content="Stop" HorizontalAlignment="Left" Height="51" Margin="199,0,0,85" VerticalAlignment="Bottom" Width="52" Click="stop_button_Click" Grid.Row="1"/>
+
+        <!-- Primary button group -->
+        <Button x:Name="skip_back" Content="&lt;" HorizontalAlignment="Left" Margin="72,0,0,230" VerticalAlignment="Bottom" Height="52" Width="52" Click="skip_back_Click" Grid.Row="1"/>
+        <Button x:Name="skip_forward" Content=">" HorizontalAlignment="Left" Margin="272,0,0,230" VerticalAlignment="Bottom" Height="52" Width="52" Click="skip_forward_Click" Grid.Row="1"/>
+        <Button Name="play_pause_button" Content="Pause" HorizontalAlignment="Left" Margin="156,0,0,216" Width="80" Click="play_pause_button_Click" VerticalAlignment="Bottom" Height="80" Grid.Row="1"/>
+
+        <Image Name="cover" HorizontalAlignment="Right" Height="380" Margin="0,40,40,0" VerticalAlignment="Top" Width="380" Grid.RowSpan="2"/>
+        <Label Name="track_title_display" Content="File Unselected" Margin="25,102,444,9" FontSize="26" HorizontalContentAlignment="Center" Foreground="White"/>
+        <Label Name="artist_display" Content="Artist Name" Margin="25,139,444,291" FontSize="20" HorizontalContentAlignment="Center" Foreground="White" Grid.RowSpan="2"/>
+        <CheckBox Name="mute_button" Content="" HorizontalAlignment="Left" Margin="33,0,0,169" VerticalAlignment="Bottom" Checked="mute_button_Checked" Unchecked="mute_button_Unchecked" Grid.Row="1"/>
         <!-- <CheckBox Name="auto_advance_button" Content="AutoAdvance" HorizontalAlignment="Left" Margin="184,40,0,0" VerticalAlignment="Top" Checked="auto_advance_button_Checked" Unchecked="auto_advance_button_Unchecked" IsChecked="True"/> -->
     </Grid>
 </Window>
