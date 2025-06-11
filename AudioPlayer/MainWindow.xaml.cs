@@ -34,7 +34,7 @@ namespace AudioPlayer
 
             // Manually reset mute button and volume to avoid errors:
             lastVolState = 100;
-            mute_button.IsChecked = false;       
+            mute_button.IsChecked = false;
 
         }
 

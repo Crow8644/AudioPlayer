@@ -11,8 +11,12 @@
   <ItemGroup>
     <None Remove="DefaultCoverPlain.png" />
     <None Remove="icons\app_icon.PNG" />
+    <None Remove="icons\bkwd_icon.PNG" />
+    <None Remove="icons\frwd_icon.PNG" />
     <None Remove="icons\pause_icon.PNG" />
     <None Remove="icons\play_icon.PNG" />
+    <None Remove="icons\skipb_icon.PNG" />
+    <None Remove="icons\skipf_icon.PNG" />
     <None Remove="icons\stop_icon.PNG" />
   </ItemGroup>
 
@@ -28,10 +32,22 @@
     <Resource Include="icons\app_icon.PNG">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="icons\bkwd_icon.PNG">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\frwd_icon.PNG">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="icons\pause_icon.PNG">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="icons\play_icon.PNG">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\skipb_icon.PNG">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\skipf_icon.PNG">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="icons\stop_icon.PNG">
