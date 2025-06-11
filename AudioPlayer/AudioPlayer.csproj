@@ -10,6 +10,10 @@
 
   <ItemGroup>
     <None Remove="DefaultCoverPlain.png" />
+    <None Remove="icons\app_icon.PNG" />
+    <None Remove="icons\pause_icon.PNG" />
+    <None Remove="icons\play_icon.PNG" />
+    <None Remove="icons\stop_icon.PNG" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +22,36 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AudioProcesses\AudioProcesses.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="icons\app_icon.PNG">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\pause_icon.PNG">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\play_icon.PNG">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="icons\stop_icon.PNG">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

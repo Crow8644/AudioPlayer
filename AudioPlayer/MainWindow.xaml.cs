@@ -10,6 +10,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Resources;
 
 namespace AudioPlayer
 {
@@ -20,6 +21,7 @@ namespace AudioPlayer
     {
         private bool paused = false;
         private double lastVolState;
+        private bool functionalityLocked = false;
         
         public MainWindow()
         {
@@ -32,7 +34,8 @@ namespace AudioPlayer
 
             // Manually reset mute button and volume to avoid errors:
             lastVolState = 100;
-            mute_button.IsChecked = false;                          
+            mute_button.IsChecked = false;       
+
         }
 
         private void MainWindow_KeyDown(object sender, KeyEventArgs e)
@@ -62,6 +65,46 @@ namespace AudioPlayer
             Sounds.closeObjects(this);
         }
 
+        public void lock_controls()
+        {
+            if (!functionalityLocked)   // This private flag is used to avoid unnecessary work
+            {
+                // The main control we want to keep enabled here is the file_select button
+                play_pause_button.IsEnabled = false;
+                stop_button.IsEnabled = false;
+                skip_back.IsEnabled = false;
+                skip_forward.IsEnabled = false;
+                rewind_button.IsEnabled = false;
+                foward_button.IsEnabled = false;
+                mute_button.IsEnabled = false;
+
+                track_progress.IsEnabled = false;
+                volume_slider.IsEnabled = false;
+
+                functionalityLocked = true;
+            }
+        }
+
+        public void unlock_controls()
+        {
+            if (functionalityLocked)
+            {
+                // (Re)activate everything in the window
+                play_pause_button.IsEnabled = true;
+                stop_button.IsEnabled = true;
+                skip_back.IsEnabled = true;
+                skip_forward.IsEnabled = true;
+                rewind_button.IsEnabled = true;
+                foward_button.IsEnabled = true;
+                mute_button.IsEnabled = true;
+
+                track_progress.IsEnabled = true;
+                volume_slider.IsEnabled = true;
+
+                functionalityLocked = false;
+            }
+        }
+
         // Calls our FSharp code for the file dialog box every time the load file button is clicked
         private void load_button_clicked(object sender, RoutedEventArgs e)
         {
@@ -69,14 +112,14 @@ namespace AudioPlayer
             // We need to stop the playback in a different SynchronizationContext before returning and loading using this SynchronizationContext
             void internalLoad(Task oldTask)
             {
-                bool x = Files.getAudioFile(track_title_display, cover);
-                paused = !x;
-                play_pause_button.Content = (paused) ? "Play" : "Pause";
+                bool suc = Files.getAudioFile(track_title_display, cover);
+                if (suc) { unlock_controls(); }                             // Unlocks the controls if things are successfully playing
+                paused = !suc;
+                play_pause_button.Content = (paused) ? this.Resources["play_icon"] : this.Resources["pause_icon"];
             }
             Task t = new Task(Sounds.stopAndWait);
             Task UITask = t.ContinueWith(internalLoad, TaskScheduler.FromCurrentSynchronizationContext());
             
-
             t.Start();
         }
 
@@ -86,7 +129,8 @@ namespace AudioPlayer
             if (paused)
             {
                 if (Sounds.play(sender)) {
-                    play_pause_button.Content = "Pause";
+                    //play_pause_button.Content = "Pause";
+                    play_pause_button.Content = this.Resources["pause_icon"];
                     paused = false;
                 }
             }
@@ -94,7 +138,8 @@ namespace AudioPlayer
             {
                 if (Sounds.pause())
                 {
-                    play_pause_button.Content = "Play";
+                    //play_pause_button.Content = "Play";
+                    play_pause_button.Content = this.Resources["play_icon"];
                     paused = true;
                 }
             }
@@ -103,7 +148,7 @@ namespace AudioPlayer
         private void stop_button_Click(object sender, RoutedEventArgs e)
         {
             Sounds.stop();
-            play_pause_button.Content = "Play";
+            play_pause_button.Content = this.Resources["play_icon"];
             paused = true;
         }
 

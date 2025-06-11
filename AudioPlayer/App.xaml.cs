@@ -5,11 +5,10 @@ using System.Windows;
 namespace AudioPlayer
 {
     /// <summary>
-    /// This file handles the passing of cmd-line args
+    /// This class handles the passing of cmd-line args and consequential startup properties
     /// </summary>
     public partial class App : Application
     {
-        
         private void Application_Startup(object sender, StartupEventArgs e)
         {
             MainWindow window = new MainWindow();
@@ -23,7 +22,7 @@ namespace AudioPlayer
             }
             else
             {
-                //TODO: Lock controls
+                window.lock_controls();
                 Files.setImage("", window.getImageControl());
                 window.Show();
             }

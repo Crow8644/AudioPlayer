@@ -4,7 +4,7 @@
 // Created 6/05/2025
 
 module Metadata
-open ATL
+open ATL                                // 3rd-party library for accessing metadata
 open System.Windows.Media.Imaging
 open System.IO
 

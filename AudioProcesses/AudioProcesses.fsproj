@@ -16,6 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+	  <Compile Include="SaveLoadData.fs" />
 	  <Resource Include="DefaultCoverAdjusted.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
@@ -24,8 +25,6 @@
 	  <Compile Include="Sounds.fs" />
 	  <Compile Include="Files.fs" />
   </ItemGroup>
-
-  <ItemGroup />
 
   <ItemGroup>
     <Folder Include="Properties\" />

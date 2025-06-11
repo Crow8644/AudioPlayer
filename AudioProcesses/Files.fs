@@ -10,8 +10,6 @@ open System.Linq
 open System.Windows.Forms
 open System.Windows.Controls
 open System.Windows.Media.Imaging
-open System.Resources
-//open System.Drawing
 open System.Reflection
 
 // directory_nav module is used as a two way enumerator to track the files around that originally selected
@@ -126,6 +124,7 @@ let rewindFile(imageControl: Image): string =
 
 // This function runs the file selection dialog and proccesses the result, ultimately initiating playback
 // Must run in the UI thread
+// Returns true if audio is playing after excecution, false if not
 let getAudioFile(display: ContentControl, imageControl: Image) =
     let dialog = new OpenFileDialog()
 
@@ -134,8 +133,8 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
     then if Directory.Exists userFolder then default_path <- userFolder else default_path <- "c:\\"
 
     // Set dialog properties
-    dialog.InitialDirectory <- default_path                             // Starts at the highest level
-    dialog.Filter <- "supported audio files (*.wav;*.mp3;.aiff;.wma)|*.wav;*.mp3;*.aiff;*.wma"      // Only allows the selection of .wav and .mp3 files
+    dialog.InitialDirectory <- default_path                                                     // Starts at the saved default
+    dialog.Filter <- "supported audio files (*.wav;*.mp3;.aiff;.wma)|*.wav;*.mp3;*.aiff;*.wma"  // Only allows the selection of supported files
 
     // Triggers the user selection and saves whether a file was selected or cancelled
 
@@ -145,8 +144,8 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
         setupAudioFile(dialog.FileName, display, imageControl)
     else 
         // Leaves display the same when the dialog box was closed
-        Sounds.play()                                                                     // Tries to restart the audio, if it exists
-                                                                                          // We want to return the success of that, so the caller knows if audio is now playing
+        Sounds.play()                                                                           // Tries to restart the audio, if it exists
+                                                                                                // We want to return the success of that, so the caller knows if audio is now playing
 
 //Forum that solved some headaches:
 //https://stackoverflow.com/questions/9646684/cant-use-system-windows-forms
