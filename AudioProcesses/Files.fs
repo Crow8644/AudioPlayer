@@ -144,9 +144,9 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
         //If selection was a success
         setupAudioFile(dialog.FileName, display, imageControl)
     else 
-        display.Content <- "Unselected"                                                             // Leaves display the same when the dialog box was closed
-        Sounds.play() |> ignore                                                                     // Tries to restart the audio, if it exists
-        false
+        // Leaves display the same when the dialog box was closed
+        Sounds.play()                                                                     // Tries to restart the audio, if it exists
+                                                                                          // We want to return the success of that, so the caller knows if audio is now playing
 
 //Forum that solved some headaches:
 //https://stackoverflow.com/questions/9646684/cant-use-system-windows-forms

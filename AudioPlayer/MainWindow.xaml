@@ -6,7 +6,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AudioPlayer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="540" Width="810">
+        Title="MainWindow" Height="540" Width="810"
+        ResizeMode="CanMinimize">
+    <!-- Disables resizing without disabling minimizing -->
     <Window.Resources>
         <Style x:Key="RepeatButtonTransparent" TargetType="{x:Type RepeatButton}">
             <Setter Property="OverridesDefaultStyle" Value="true"/>
@@ -160,20 +162,50 @@
             </Slider.Resources>
         </Slider>
         <Button Name="file_select" Content="Select File" HorizontalAlignment="Left" Height="45" Margin="40,40,0,0" VerticalAlignment="Top" Width="116" Click="load_button_clicked"/>
+        <Border HorizontalAlignment="Left" Grid.Row="1" VerticalAlignment="Bottom" Width="231">
+            <Grid Margin="95,0,-95,0">
+                <Button x:Name="rewind_button" Content="Rewind" HorizontalAlignment="Left" Margin="0,0,0,91" VerticalAlignment="Bottom" Height="51" Width="68" Click="rewind_button_Click"/>
+                <Button x:Name="foward_button" Content="Forward" HorizontalAlignment="Left" Margin="163,0,0,91" VerticalAlignment="Bottom" Height="51" Width="68" Click="foward_button_Click"/>
+                <Button x:Name="stop_button" Content="Stop" HorizontalAlignment="Center" Height="51" VerticalAlignment="Top" Width="52" Click="stop_button_Click"/>
+            </Grid>
+        </Border>
         <!-- Secondary button group -->
-        <Button Name="rewind_button" Content="Rewind" HorizontalAlignment="Left" Margin="109,0,0,85" VerticalAlignment="Bottom" Height="51" Width="68" Click="rewind_button_Click" Grid.Row="1"/>
-        <Button Name="foward_button" Content="Forward" HorizontalAlignment="Left" Margin="272,0,0,85" VerticalAlignment="Bottom" Height="51" Width="68" Click="foward_button_Click" Grid.Row="1"/>
-        <Button Name="stop_button" Content="Stop" HorizontalAlignment="Left" Height="51" Margin="199,0,0,85" VerticalAlignment="Bottom" Width="52" Click="stop_button_Click" Grid.Row="1"/>
+        <Border HorizontalAlignment="Left" Height="80" Margin="72,0,0,216" Grid.Row="1" VerticalAlignment="Bottom" Width="252">
+            <Grid Margin="-10,0,10,0">
+                <Button x:Name="skip_back" Content="&lt;" HorizontalAlignment="Left" VerticalAlignment="Center" Height="52" Width="52" Click="skip_back_Click"/>
+                <Button x:Name="skip_forward" Content="&gt;" HorizontalAlignment="Left" Margin="200,0,0,0" VerticalAlignment="Center" Height="52" Width="52" Click="skip_forward_Click"/>
+                <Button x:Name="play_pause_button" Content="Pause" HorizontalAlignment="Center" Width="80" Click="play_pause_button_Click" VerticalAlignment="Center" Height="80"/>
+
+            </Grid>
+        </Border>
 
         <!-- Primary button group -->
-        <Button x:Name="skip_back" Content="&lt;" HorizontalAlignment="Left" Margin="72,0,0,230" VerticalAlignment="Bottom" Height="52" Width="52" Click="skip_back_Click" Grid.Row="1"/>
-        <Button x:Name="skip_forward" Content=">" HorizontalAlignment="Left" Margin="272,0,0,230" VerticalAlignment="Bottom" Height="52" Width="52" Click="skip_forward_Click" Grid.Row="1"/>
-        <Button Name="play_pause_button" Content="Pause" HorizontalAlignment="Left" Margin="156,0,0,216" Width="80" Click="play_pause_button_Click" VerticalAlignment="Bottom" Height="80" Grid.Row="1"/>
 
-        <Image Name="cover" HorizontalAlignment="Right" Height="380" Margin="0,40,40,0" VerticalAlignment="Top" Width="380" Grid.RowSpan="2"/>
-        <Label Name="track_title_display" Content="File Unselected" Margin="25,102,444,9" FontSize="26" HorizontalContentAlignment="Center" Foreground="White"/>
-        <Label Name="artist_display" Content="Artist Name" Margin="25,139,444,291" FontSize="20" HorizontalContentAlignment="Center" Foreground="White" Grid.RowSpan="2"/>
+        <Image Name="cover" HorizontalAlignment="Right" Height="370" Margin="0,40,40,0" VerticalAlignment="Top" Width="370" Grid.RowSpan="2"/>
+        <Label Name="track_title_display" Content="File Unselected" Margin="25,102,444,9" FontSize="26" HorizontalContentAlignment="Center" Foreground="White">
+            <Label.Effect>
+                <DropShadowEffect
+                ShadowDepth="1"
+                Direction="310"
+                Color="Black"
+                Opacity="0.8"
+                BlurRadius="1"/>
+            </Label.Effect>
+        </Label>
+        <Label Name="artist_display" Content="Artist Name" Margin="25,139,444,291" FontSize="20" HorizontalContentAlignment="Center" Foreground="White" Grid.RowSpan="2">
+            <Label.Effect>
+                <DropShadowEffect
+                ShadowDepth="1"
+                Direction="310"
+                Color="Black"
+                Opacity="0.8"
+                BlurRadius="1"/>
+            </Label.Effect>
+        </Label>
         <CheckBox Name="mute_button" Content="" HorizontalAlignment="Left" Margin="33,0,0,169" VerticalAlignment="Bottom" Checked="mute_button_Checked" Unchecked="mute_button_Unchecked" Grid.Row="1"/>
         <!-- <CheckBox Name="auto_advance_button" Content="AutoAdvance" HorizontalAlignment="Left" Margin="184,40,0,0" VerticalAlignment="Top" Checked="auto_advance_button_Checked" Unchecked="auto_advance_button_Unchecked" IsChecked="True"/> -->
+
+        <Label Name="track_start_label" Content="0:00" Foreground="White" Margin="76,223,667,10" Grid.Row="1"/>
+        <Label Name="track_end_label" Content="-:--" Foreground="White" Margin="717,224,26,9" Grid.Row="1" HorizontalContentAlignment="Right"/>
     </Grid>
 </Window>
