@@ -27,3 +27,10 @@ let getArtist(filePath: string): Option<string> =
     if not (artist = "")                // Tests if there really was an artist embedded in the file
     then Some artist
     else None
+
+let getDuration(filePath: string): Option<System.TimeSpan> =
+    let track: Track = new Track(filePath)
+    let seconds: int = track.Duration
+    if not (seconds = 0)                // Tests if there really was an artist embedded in the file
+    then Some (new System.TimeSpan(0, 0, seconds))
+    else None

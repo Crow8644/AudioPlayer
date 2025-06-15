@@ -18,3 +18,9 @@ let regexSeperate(regex: string, default_ret: string, toParse: string) =
 let matchesExtention(path: string, extentions: array<string>): bool =
     let ext: string = Path.GetExtension(path)
     extentions |> Array.map(fun s -> (s = ext)) |> Array.reduce(||)
+
+let standardTimeDisplay(span: System.TimeSpan): string =
+    if span.Hours = 0 then
+         (string span.Minutes) + ":" + (sprintf "%02d" span.Seconds)
+    else
+         (string span.Hours) + ":" + (sprintf "%02d" span.Minutes) + ":" + (sprintf "%02d" span.Seconds)

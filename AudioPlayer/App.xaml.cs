@@ -18,7 +18,7 @@ namespace AudioPlayer
                 window.Show();
                 // Gets the controls from the window and passes that to Files
                 // Using this function skips the dialog openning and stop-wait proccess but completes the file setup
-                Files.setupAudioFile(e.Args[0], window.getTrackTitleDisplay(), window.getImageControl());
+                Files.setupAudioFile(e.Args[0], window.getTrackTitleDisplay(), window.getArtistDispaly(), window.getTimeDisplay(), window.getImageControl());
             }
             else
             {

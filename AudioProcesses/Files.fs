@@ -11,6 +11,9 @@ open System.Windows.Forms
 open System.Windows.Controls
 open System.Windows.Media.Imaging
 open System.Reflection
+open System.Threading.Tasks
+
+let imageLock: obj = new obj()                                         // Used as a mutext to guard acccesses to the image control
 
 // directory_nav module is used as a two way enumerator to track the files around that originally selected
 // It has three members:
@@ -44,19 +47,50 @@ let seperateParentPath = fun path -> Utilities.regexSeperate("^(.*\\\)([^\\\]*)(
 // wav, mp3, aiff, and wma are the four currently supported extentions
 let isValidAudioFile = fun path -> Utilities.matchesExtention(path, [|".wav"; ".mp3"; ".aiff"; "wma"|])
 
+// Sets the source of the passed image control to the embedded image in the file
 let setImage(filename: string, control: System.Windows.Controls.Image) =
+    // Making a new thread here so the GUI thread is not blocked by the loading of an embedded image
+    // let t:Task = new Task(fun _ ->
+        // To prevent multiple threads from modifying the image control at once
+    lock imageLock (fun _ ->
     match Metadata.getFilePhoto(filename) with
-    | Some(bitmap) ->
-        control.Source <- bitmap
-    | None ->
-        let coverStream: Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DefaultCoverAdjusted.png")
-        
-        let defaultFrame = BitmapFrame.Create(coverStream, BitmapCreateOptions.None,BitmapCacheOption.OnLoad)
-
-        control.Source <- defaultFrame
+        | Some(bitmap) ->
+            control.Source <- bitmap
+        | None ->
+            // Load the default cover image from as a stream
+            let coverStream: Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DefaultCoverAdjusted.png")
+            let defaultFrame = BitmapFrame.Create(coverStream, BitmapCreateOptions.None,BitmapCacheOption.OnLoad)
+            control.Source <- defaultFrame
+    )
     // Image Resource Citations:
     // https://www.codeproject.com/Articles/13573/Extracting-Embedded-Images-From-An-Assembly
     // https://learn.microsoft.com/en-us/dotnet/desktop/wpf/advanced/how-to-use-resources-in-localizable-applications
+
+
+let setNonSound(filename: string, artistDisplay: ContentControl, endTime: ContentControl, image: System.Windows.Controls.Image) =
+    setImage(filename, image)
+
+    match Metadata.getArtist(filename) with
+    | Some(artist) ->
+        artistDisplay.Content <- artist
+    | None ->
+        artistDisplay.Content <- "Unknown Artist"
+
+    // Using duration instead of referencing Sounds.audioFile means some files with scrubbed data will not display time
+    // However, it also prevents the need to wait for PlaybackStopped and could be more accurate than the estimates used for compressed files
+    match Metadata.getDuration(filename) with                 // Finds if we can get a time span from the audio file object in Sounds
+    | Some(time: TimeSpan) ->
+        endTime.Content <- Utilities.standardTimeDisplay(time)
+    | None ->
+        endTime.Content <- "-:--"
+
+// Returns a string to display as the current time in playback, formatted in a standard way
+let currentTimeDisplay(): string =
+    match Sounds.getCurrentTime() with
+    | Some(time: TimeSpan) ->
+        Utilities.standardTimeDisplay(time)
+    | None ->
+        "0:00"
 
 // Starts the enumerator at a specified file
 // Used to start at the current playing song when a file is selected from the middle of a directory
@@ -65,12 +99,13 @@ let moveNavTo(path: string) =
 
 // Calls the file switch in Sounds for the next file in the directory
 // continuing may be false if the user has chosen not to automatically advance file
-let advanceFile(imageControl: Image, continuing: bool): string =
+let advanceFile(imageControl: Image, artistName: ContentControl, endTime: ContentControl, continuing: bool): string =
     directory_nav.pos <- directory_nav.pos + 1                                          // We increment the counter at this point, before checking if it fits in the array
     if directory_nav.pos < directory_nav.array.Length && continuing
     then 
-        Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))   // We do this because we have to wait until playback stops
-        setImage(directory_nav.current(), imageControl) |> ignore
+        // We do this because we have to wait until playback stops
+        Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))
+        setNonSound(directory_nav.current(), artistName, endTime, imageControl) |> ignore
         let fileList = (directory_nav.current() |> seperateParentPath)
         if fileList.Length > 1
         then fileList.Item 2                                                            // Returns the current file name for UI reasons
@@ -78,7 +113,7 @@ let advanceFile(imageControl: Image, continuing: bool): string =
     else ""
 
 // Seperated from below function to allow command line parsing
-let setupAudioFile(file: string, display: ContentControl, imageControl: Image) = 
+let setupAudioFile(file: string, display: ContentControl, artistDisplay: ContentControl, timeDisplay: ContentControl, imageControl: Image) = 
     if File.Exists file
     then
         let fileList = seperateParentPath file
@@ -92,11 +127,11 @@ let setupAudioFile(file: string, display: ContentControl, imageControl: Image) =
         else
             directory_nav.array <- [||]                 // Reset to a blank array
 
-        if Sounds.initializeAudio(file, (fun b -> advanceFile(imageControl, b)), 
+        if Sounds.initializeAudio(file, (fun b -> advanceFile(imageControl, artistDisplay, timeDisplay, b)), 
             fun name -> display.Content <- name)
         then 
             display.Content <- if fileList.Length > 1 then fileList.Item 2 else file                // Displays the name of the file
-            setImage(directory_nav.current(), imageControl)
+            setNonSound(directory_nav.current(), artistDisplay, timeDisplay, imageControl)
             true
         else 
             MessageBox.Show("There was an error in playing the selected file", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Error) |> ignore
@@ -108,12 +143,13 @@ let setupAudioFile(file: string, display: ContentControl, imageControl: Image) =
         false
 
 // Switches to the alphabetically previous file in the directory
-let rewindFile(imageControl: Image): string =
+let rewindFile(imageControl: Image, artistName: ContentControl, endTime: ContentControl): string =
     if Sounds.getFileProgress 20 = 0 && directory_nav.pos > 0 then           // Goes backwards if the file is in the first 20th of its runtime
         directory_nav.pos <- directory_nav.pos - 1
 
-    Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))       // Is sure to pause before requesting the track to switch
-    setImage(directory_nav.current(), imageControl) |> ignore
+    // Is sure to pause before requesting the track and display to switch
+    Sounds.stopAndDo(fun _ -> Sounds.switchToFile(directory_nav.current(), true))
+    setNonSound(directory_nav.current(), artistName, endTime, imageControl) |> ignore
     let fileList = (directory_nav.current() |> seperateParentPath)
     if fileList.Length > 1
     then fileList.Item 2                                                                // Returns the current file name for UI reasons
@@ -125,7 +161,7 @@ let rewindFile(imageControl: Image): string =
 // This function runs the file selection dialog and proccesses the result, ultimately initiating playback
 // Must run in the UI thread
 // Returns true if audio is playing after excecution, false if not
-let getAudioFile(display: ContentControl, imageControl: Image) =
+let getAudioFile(display: ContentControl, artistDisplay: ContentControl, timeDisplay: ContentControl, imageControl: Image) =
     let dialog = new OpenFileDialog()
 
     // Extra protection, resets the user's home directory if the previously used directory was deleted
@@ -141,7 +177,7 @@ let getAudioFile(display: ContentControl, imageControl: Image) =
     if dialog.ShowDialog() = System.Windows.Forms.DialogResult.OK
         then
         //If selection was a success
-        setupAudioFile(dialog.FileName, display, imageControl)
+        setupAudioFile(dialog.FileName, display, artistDisplay, timeDisplay, imageControl)
     else 
         // Leaves display the same when the dialog box was closed
         Sounds.play()                                                                           // Tries to restart the audio, if it exists

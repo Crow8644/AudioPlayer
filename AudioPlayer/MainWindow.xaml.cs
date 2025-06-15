@@ -112,7 +112,7 @@ namespace AudioPlayer
             // We need to stop the playback in a different SynchronizationContext before returning and loading using this SynchronizationContext
             void internalLoad(Task oldTask)
             {
-                bool suc = Files.getAudioFile(track_title_display, cover);
+                bool suc = Files.getAudioFile(track_title_display, artist_display, track_end_label, cover);
                 if (suc) { unlock_controls(); }                             // Unlocks the controls if things are successfully playing
                 paused = !suc;
                 play_pause_button.Content = (paused) ? this.Resources["play_icon"] : this.Resources["pause_icon"];
@@ -154,12 +154,12 @@ namespace AudioPlayer
 
         private void rewind_button_Click(object sender, RoutedEventArgs e)
         {
-            track_title_display.Content = Files.rewindFile(cover);
+            track_title_display.Content = Files.rewindFile(cover, artist_display, track_end_label);
         }
 
         private void foward_button_Click(object sender, RoutedEventArgs e)
         {
-            track_title_display.Content = Files.advanceFile(cover, true);
+            track_title_display.Content = Files.advanceFile(cover, artist_display, track_end_label, true);
         }
 
         private void update_progress_slider(object? sender, EventArgs e)
@@ -168,6 +168,8 @@ namespace AudioPlayer
             if (progress > 0 && !track_progress.IsMouseCaptureWithin) {
                 track_progress.Value = progress / ((float)track_progress.Width / 10.0f); // We divide by ten because the slider is out of ten
             }
+            // Contains a call to Sounds.getCurrentTime(); and handles the string making and the Option<>
+            track_start_label.Content = Files.currentTimeDisplay();
         }
 
         private void volume_slider_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
@@ -212,9 +214,17 @@ namespace AudioPlayer
         }
         */
 
+        public ContentControl getArtistDispaly()
+        {
+            return artist_display;
+        }
         public ContentControl getTrackTitleDisplay()
         {
             return track_title_display;
+        }
+        public ContentControl getTimeDisplay()
+        {
+            return track_end_label;
         }
         public Image getImageControl()
         {

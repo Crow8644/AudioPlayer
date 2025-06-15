@@ -71,7 +71,17 @@ let skip(seconds: int) =
         | null ->
             ()
         | _ ->
-            audioFile.Skip(seconds)
+            audioFile.Skip seconds
+    )
+
+let getCurrentTime(): Option<System.TimeSpan> =
+    lock switchLock (fun _ ->
+        // Tests if audioFile has been initialized
+        match audioFile with
+        | null ->
+            None
+        | _ ->
+            Some audioFile.CurrentTime
     )
 
 // Returns a value out of paramater range for how through being played the file is

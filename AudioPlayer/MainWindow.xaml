@@ -12,6 +12,8 @@
     <!-- Disables resizing without disabling minimizing -->
     
     <Window.Resources>
+        <!-- Referenced: https://stackoverflow.com/a/17515867 -->
+        
         <!-- Defining resources to be accessed by our code using this.Resources -->
         <Image x:Key="pause_icon" Source="icons/pause_icon.png" Width="80" Height="80"/>
         <Image x:Key="play_icon" Source="icons/play_icon.png" Width="80" Height="80"/>
@@ -21,7 +23,8 @@
         <Image x:Key="frwd_icon" Source="icons/frwd_icon.png" Width="52" Height="52"/>
         <Image x:Key="skipb_icon" Source="icons/skipb_icon.png" Width="52" Height="52"/>
         <Image x:Key="skipf_icon" Source="icons/skipf_icon.png" Width="52" Height="52"/>
-
+        
+        <!-- Button Style -->
 
         <Style x:Key="RepeatButtonTransparent" TargetType="{x:Type RepeatButton}">
             <Setter Property="OverridesDefaultStyle" Value="true"/>
