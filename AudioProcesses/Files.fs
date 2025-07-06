@@ -66,7 +66,6 @@ let setImage(filename: string, control: System.Windows.Controls.Image) =
     // https://www.codeproject.com/Articles/13573/Extracting-Embedded-Images-From-An-Assembly
     // https://learn.microsoft.com/en-us/dotnet/desktop/wpf/advanced/how-to-use-resources-in-localizable-applications
 
-
 let setNonSound(filename: string, artistDisplay: ContentControl, endTime: ContentControl, image: System.Windows.Controls.Image) =
     setImage(filename, image)
 

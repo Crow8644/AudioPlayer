@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
-
+	
   <ItemGroup>
     <None Remove="DefaultCoverPlain.png" />
     <None Remove="icons\app_icon.PNG" />
@@ -27,6 +27,10 @@
   <ItemGroup>
     <ProjectReference Include="..\AudioProcesses\AudioProcesses.fsproj" />
   </ItemGroup>
+
+    <ItemGroup>
+		<RuntimeHostConfigurationOption Include="System.Globalization.Invariant" Value="true"/>
+	</ItemGroup>
 
   <ItemGroup>
     <Resource Include="icons\app_icon.PNG">
