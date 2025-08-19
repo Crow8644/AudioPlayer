@@ -42,10 +42,10 @@ let mutable default_path: string = if Directory.Exists userFolder then userFolde
 // It seemingly processes escaping the regex special characters and escaping the string characters on seperate occations
 // This makes a \\ process as \ AND THEN cause a \) or \] to be processed as a literal ) or ]
 // The triple slash is necessary for the regex to match a single slash
-let seperateParentPath = fun path -> Utilities.regexSeperate("^(.*\\\)([^\\\]*)(\.[^\\\]*)$", default_path, path)
+let seperateParentPath = Utilities.regexSeperate "^(.*\\\)([^\\\]*)(\.[^\\\]*)$" default_path
 
 // wav, mp3, aiff, and wma are the four currently supported extentions
-let isValidAudioFile = fun path -> Utilities.matchesExtention(path, [|".wav"; ".mp3"; ".aiff"; "wma"|])
+let isValidAudioFile = Utilities.matchesExtention [|".wav"; ".mp3"; ".aiff"; "wma"|]
 
 // Sets the source of the passed image control to the embedded image in the file
 let setImage(filename: string, control: System.Windows.Controls.Image) =
@@ -57,8 +57,8 @@ let setImage(filename: string, control: System.Windows.Controls.Image) =
         | Some(bitmap) ->
             control.Source <- bitmap
         | None ->
-            // Load the default cover image from as a stream
-            let coverStream: Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("DefaultCoverAdjusted.png")
+            // Load the default cover image as a stream
+            let coverStream: Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream "DefaultCoverAdjusted.png"
             let defaultFrame = BitmapFrame.Create(coverStream, BitmapCreateOptions.None,BitmapCacheOption.OnLoad)
             control.Source <- defaultFrame
     )

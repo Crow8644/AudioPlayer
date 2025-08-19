@@ -59,7 +59,7 @@ let changeFilePostitionTo(postion: float) =
         | _ ->
             // The setter for Position has built-in protection
             audioFile.Position <-
-            // This calculation finds the exact byte position that needs to be set, understanding that the result must be an integer multiple of BlockAlign
+            // This calculation finds the exact byte position that needs to be set, ensuring that the result be an integer multiple of BlockAlign
             audioFile.Length / (int64)audioFile.BlockAlign |> float 
             |> (*) postion |> int64 
             |> (*) (int64 audioFile.BlockAlign)
